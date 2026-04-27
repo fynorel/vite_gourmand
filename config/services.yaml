@@ -8,16 +8,43 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
 
-services:
-    # default configuration for services in *this* file
-    _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
-    App\:
+# config/services.yaml
+
+services:
+  _defaults:
+    autowire: true      # Injection automatique des dépendances
+    autoconfigure: true # Enregistrement automatique des services
+
+  App\:
         resource: '../src/'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+  # Enregistrement du service MenuStatsService
+  App\Service\MenuStatsService:
+    arguments:
+      $mongoUri: '%env(MONGODB_URI)%'
+    public: true
+
+  # EventListener pour la synchronisation automatique
+  App\EventListener\CommandeListener:
+    arguments:
+      - '@App\Service\MenuStatsService'
+      - '@App\Repository\AvisRepository'
+    tags:
+      - { name: doctrine.event_listener, event: postPersist, priority: 500 }
+      - { name: doctrine.event_listener, event: postUpdate, priority: 500 }
+      - { name: doctrine.event_listener, event: postRemove, priority: 500 }
+
+  # Command pour la synchronisation en batch
+  App\Command\SyncMenuStatsCommand:
+    arguments:
+      - '@App\Repository\MenuRepository'
+      - '@App\Service\MenuStatsService'
+      - '@doctrine.orm.entity_manager'
+    tags:
+      - { name: console.command }
+
+  # Controller Admin avec injection du service
+  App\Controller\Admin\DashboardController:
+    arguments:
+      - '@App\Service\MenuStatsService'

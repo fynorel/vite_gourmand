@@ -1,0 +1,199 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard Admin - Statistiques{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="display-4">📊 Dashboard Statistiques</h1>
+            <p class="text-muted">Données agrégées depuis MongoDB en temps réel</p>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">📦 Nombre total de commandes</h5>
+                    <p class="card-text display-5">{{ totalOrders }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">💰 Revenu total</h5>
+                    <p class="card-text display-5">{{ totalRevenue|number_format(2, ',', ' ') }}€</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chart -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Commandes par Menu</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="commandesChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Chart -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Chiffre d'affaires par Menu</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Top Menus by Orders -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">🏆 Top 5 Menus les plus commandés</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Menu</th>
+                                <th class="text-end">Commandes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for menu in topMenusByOrders %}
+                            <tr>
+                                <td>{{ menu.titleMenu }}</td>
+                                <td class="text-end"><strong>{{ menu.totalOrders }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Menus by Revenue -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">💎 Top 5 Menus les plus rentables</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Menu</th>
+                                <th class="text-end">Revenu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for menu in topMenusByRevenue %}
+                            <tr>
+                                <td>{{ menu.titleMenu }}</td>
+                                <td class="text-end"><strong>{{ menu.totalRevenue|number_format(2, ',', ' ') }}€</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+    // Données du backend
+    const chartData = {{ chartData|json_encode|raw }};
+
+    // Graphique des commandes
+    const ctxOrders = document.getElementById('commandesChart').getContext('2d');
+    new Chart(ctxOrders, {
+        type: 'bar',
+        data: {
+            labels: chartData.map(d => d.title),
+            datasets: [{
+                label: 'Nombre de commandes',
+                data: chartData.map(d => d.orders),
+                backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+    // Graphique du revenu
+    const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctxRevenue, {
+        type: 'doughnut',
+        data: {
+            labels: chartData.map(d => d.title),
+            datasets: [{
+                label: 'Chiffre d\'affaires (€)',
+                data: chartData.map(d => d.revenue),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                ],
+                borderWidth: 1,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'right',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

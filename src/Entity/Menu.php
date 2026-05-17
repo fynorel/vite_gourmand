@@ -58,12 +58,12 @@ class Menu
     private Collection $images;
 
     /** @var Collection<int, Plat> */
-    #[ORM\ManyToMany(targetEntity: Plat::class)]
+    #[ORM\ManyToMany(targetEntity: Plat::class, inversedBy: 'menus')]
     #[ORM\JoinTable(name: 'menu_plat')]
     #[ORM\JoinColumn(name: 'id_menu', referencedColumnName: 'id_menu', onDelete: 'CASCADE')]
     #[ORM\InverseJoinColumn(name: 'id_plat', referencedColumnName: 'id_plat', onDelete: 'CASCADE')]
     private Collection $plats;
-
+    
     /** @var Collection<int, Commande> */
     #[ORM\OneToMany(targetEntity: Commande::class, mappedBy: 'menu')]
     private Collection $commandes;

@@ -2,84 +2,111 @@
 
 namespace App\Entity;
 
-use App\Enum\UserRole;
 use App\Repository\UtilisateurRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
-class Utilisateur
+#[ORM\Table(name: 'utilisateur')]
+#[ORM\UniqueConstraint(name: 'uk_mail', columns: ['mail'])]
+#[ORM\Index(name: 'idx_role', columns: ['role'])]
+#[ORM\Index(name: 'idx_actif', columns: ['actif'])]
+class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 80)]
-    private ?string $prenom = null;
-
-    #[ORM\Column(length: 80)]
+    #[ORM\Column(type: 'string', length: 80)]
     private ?string $nom = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: 'string', length: 80)]
+    private ?string $prenom = null;
+
+    #[ORM\Column(type: 'string', length: 255, unique: true)]
     private ?string $mail = null;
 
-    #[ORM\Column(length: 20, nullable: true)]
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
     private ?string $gsm = null;
 
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[ORM\Column(type: 'text', nullable: true)]
     private ?string $adresse = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(type: 'string', length: 255)]
     private ?string $mdp_hash = null;
 
-    #[ORM\Column(enumType: UserRole::class)]
-    private ?UserRole $role = null;
+    #[ORM\Column(type: 'string', length: 255)]
+    private ?string $role = 'UTILISATEUR';
 
-    #[ORM\Column]
-    private ?bool $actif = null;
+    #[ORM\Column(type: 'boolean')]
+    private bool $actif = true;
 
-    #[ORM\Column]
-    private ?int $compteurAuthentification = null;
+    #[ORM\Column(name: 'compteur_authentification', type: 'integer')]
+    private int $compteur_authentification = 0;
 
-    #[ORM\Column]
-    private ?\DateTime $dateCreation = null;
+    #[ORM\Column(name: 'date_creation', type: 'datetime_immutable')]
+    private ?\DateTimeImmutable $dateCreation = null;
 
-    /**
-     * @var Collection<int, Session>
-     */
-    #[ORM\OneToMany(targetEntity: Session::class, mappedBy: 'utilisateur', orphanRemoval: true)]
+    // Relations
+    /** @var Collection<int, Commande> */
+    #[ORM\OneToMany(targetEntity: Commande::class, mappedBy: 'utilisateur')]
+    private Collection $commandes;
+
+    /** @var Collection<int, Session> */
+    #[ORM\OneToMany(targetEntity: Session::class, mappedBy: 'utilisateur', cascade: ['remove'])]
     private Collection $sessions;
 
-    /**
-     * @var Collection<int, ResetToken>
-     */
-    #[ORM\OneToMany(targetEntity: ResetToken::class, mappedBy: 'utilisateur', orphanRemoval: true)]
+    /** @var Collection<int, ResetToken> */
+    #[ORM\OneToMany(targetEntity: ResetToken::class, mappedBy: 'utilisateur', cascade: ['remove'])]
     private Collection $resetTokens;
 
     public function __construct()
     {
+        $this->dateCreation = new \DateTimeImmutable();
+        $this->commandes = new ArrayCollection();
         $this->sessions = new ArrayCollection();
         $this->resetTokens = new ArrayCollection();
     }
 
+    // ───────────────── UserInterface Implementation ─────────────────
+
+    public function getUserIdentifier(): string
+    {
+        return $this->mail ?? '';
+    }
+
+    public function getRoles(): array
+    {
+        $roles = [];
+        if ($this->role === 'ADMINISTRATEUR') {
+            $roles[] = 'ROLE_ADMIN';
+        } elseif ($this->role === 'EMPLOYE') {
+            $roles[] = 'ROLE_EMPLOYE';
+        } else {
+            $roles[] = 'ROLE_USER';
+        }
+        return $roles;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->mdp_hash;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // N/A
+    }
+
+    // ───────────────── GETTERS / SETTERS ─────────────────
+
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getPrenom(): ?string
-    {
-        return $this->prenom;
-    }
-
-    public function setPrenom(string $prenom): static
-    {
-        $this->prenom = $prenom;
-
-        return $this;
     }
 
     public function getNom(): ?string
@@ -90,7 +117,17 @@ class Utilisateur
     public function setNom(string $nom): static
     {
         $this->nom = $nom;
+        return $this;
+    }
 
+    public function getPrenom(): ?string
+    {
+        return $this->prenom;
+    }
+
+    public function setPrenom(string $prenom): static
+    {
+        $this->prenom = $prenom;
         return $this;
     }
 
@@ -102,7 +139,6 @@ class Utilisateur
     public function setMail(string $mail): static
     {
         $this->mail = $mail;
-
         return $this;
     }
 
@@ -114,7 +150,6 @@ class Utilisateur
     public function setGsm(?string $gsm): static
     {
         $this->gsm = $gsm;
-
         return $this;
     }
 
@@ -126,7 +161,6 @@ class Utilisateur
     public function setAdresse(?string $adresse): static
     {
         $this->adresse = $adresse;
-
         return $this;
     }
 
@@ -138,23 +172,21 @@ class Utilisateur
     public function setMdpHash(string $mdp_hash): static
     {
         $this->mdp_hash = $mdp_hash;
-
         return $this;
     }
 
-    public function getRole(): ?UserRole
+    public function getRole(): ?string
     {
         return $this->role;
     }
 
-    public function setRole(UserRole $role): static
+    public function setRole(string $role): static
     {
         $this->role = $role;
-
         return $this;
     }
 
-    public function isActif(): ?bool
+    public function isActif(): bool
     {
         return $this->actif;
     }
@@ -162,31 +194,57 @@ class Utilisateur
     public function setActif(bool $actif): static
     {
         $this->actif = $actif;
-
         return $this;
     }
 
-    public function getCompteurAuthentification(): ?int
+    public function getCompteurAuthentification(): int
     {
-        return $this->compteurAuthentification;
+        return $this->compteur_authentification;
     }
 
-    public function setCompteurAuthentification(int $compteurAuthentification): static
+    public function setCompteurAuthentification(int $compteur): static
     {
-        $this->compteurAuthentification = $compteurAuthentification;
-
+        $this->compteur_authentification = $compteur;
         return $this;
     }
 
-    public function getDateCreation(): ?\DateTime
+    public function getDateCreation(): ?\DateTimeImmutable
     {
         return $this->dateCreation;
     }
 
-    public function setDateCreation(\DateTime $dateCreation): static
+    public function setDateCreation(\DateTimeImmutable $dateCreation): static
     {
         $this->dateCreation = $dateCreation;
+        return $this;
+    }
 
+    // ───────────────── Relations Collections ─────────────────
+
+    /**
+     * @return Collection<int, Commande>
+     */
+    public function getCommandes(): Collection
+    {
+        return $this->commandes;
+    }
+
+    public function addCommande(Commande $commande): static
+    {
+        if (!$this->commandes->contains($commande)) {
+            $this->commandes->add($commande);
+            $commande->setUtilisateur($this);
+        }
+        return $this;
+    }
+
+    public function removeCommande(Commande $commande): static
+    {
+        if ($this->commandes->removeElement($commande)) {
+            if ($commande->getUtilisateur() === $this) {
+                $commande->setUtilisateur(null);
+            }
+        }
         return $this;
     }
 
@@ -204,19 +262,16 @@ class Utilisateur
             $this->sessions->add($session);
             $session->setUtilisateur($this);
         }
-
         return $this;
     }
 
     public function removeSession(Session $session): static
     {
         if ($this->sessions->removeElement($session)) {
-            // set the owning side to null (unless already changed)
             if ($session->getUtilisateur() === $this) {
                 $session->setUtilisateur(null);
             }
         }
-
         return $this;
     }
 
@@ -234,19 +289,16 @@ class Utilisateur
             $this->resetTokens->add($resetToken);
             $resetToken->setUtilisateur($this);
         }
-
         return $this;
     }
 
     public function removeResetToken(ResetToken $resetToken): static
     {
         if ($this->resetTokens->removeElement($resetToken)) {
-            // set the owning side to null (unless already changed)
             if ($resetToken->getUtilisateur() === $this) {
                 $resetToken->setUtilisateur(null);
             }
         }
-
         return $this;
     }
 }

@@ -16,28 +16,33 @@ class MenuRepository extends ServiceEntityRepository
         parent::__construct($registry, Menu::class);
     }
 
-    //    /**
-    //     * @return Menu[] Returns an array of Menu objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('m')
-    //            ->andWhere('m.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('m.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+    * Récupère les menus actifs avec le nombre de plats
+    */
+    public function findActiveMenus(): array
+    {
+        return $this->getEntityManager()->getConnection()
+            ->executeQuery('SELECT * FROM v_menus_actifs')
+            ->fetchAllAssociative();
+    }
 
-    //    public function findOneBySomeField($value): ?Menu
-    //    {
-    //        return $this->createQueryBuilder('m')
-    //            ->andWhere('m.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /**
+    * Récupère les notes moyennes par menu
+    */
+    public function findMenuRatings(): array
+    {
+        return $this->getEntityManager()->getConnection()
+            ->executeQuery('SELECT * FROM v_note_moyenne_menu')
+            ->fetchAllAssociative();
+    }
+
+    /**
+    * Récupère la note moyenne pour un menu spécifique
+    */
+    public function findMenuRating(int $menuId): ?array
+    {
+        return $this->getEntityManager()->getConnection()
+            ->executeQuery('SELECT * FROM v_note_moyenne_menu WHERE id_menu = ?', [$menuId])
+            ->fetchAssociative() ?: null;
+    }
 }

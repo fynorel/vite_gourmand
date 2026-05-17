@@ -16,7 +16,7 @@ class ResetToken
     #[ORM\Column(name: 'id_token')]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Utilisateur::class, cascade: ['remove'])]
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'resetTokens')]
     #[ORM\JoinColumn(name: 'id_utilisateur', nullable: false, onDelete: 'CASCADE')]
     private ?Utilisateur $utilisateur = null;
 
@@ -26,7 +26,7 @@ class ResetToken
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $expiry = null;
 
-    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[ORM\Column(type: 'boolean')]
     private bool $used = false;
 
     #[ORM\Column(name: 'created_at', type: 'datetime_immutable')]

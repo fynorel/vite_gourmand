@@ -33,16 +33,13 @@ class Plat
     // ───────────────── RELATIONS ─────────────────
 
     /** @var Collection<int, Menu> */
-    #[ORM\ManyToMany(targetEntity: Menu::class, inversedBy: 'plats')]
-    #[ORM\JoinTable(name: 'menu_plat')]
-    #[ORM\JoinColumn(name: 'id_plat', referencedColumnName: 'id_plat', onDelete: 'CASCADE')]
-    #[ORM\InverseJoinColumn(name: 'id_menu', referencedColumnName: 'id_menu', onDelete: 'CASCADE')]
+    #[ORM\ManyToMany(targetEntity: Menu::class, mappedBy: 'plats')]
     private Collection $menus;
 
     /** @var Collection<int, Allergene> */
-    #[ORM\ManyToMany(targetEntity: Allergene::class)]
+    #[ORM\ManyToMany(targetEntity: Allergene::class, inversedBy: 'plats')]
     #[ORM\JoinTable(name: 'plat_allergene')]
-    #[ORM\JoinColumn(name: 'id_plat', referencedColumnName: 'id_allergene', onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_plat', referencedColumnName: 'id_plat', onDelete: 'CASCADE')]
     #[ORM\InverseJoinColumn(name: 'id_allergene', referencedColumnName: 'id_allergene', onDelete: 'RESTRICT')]
     private Collection $allergenes;
 

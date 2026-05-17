@@ -16,28 +16,44 @@ class CommandeRepository extends ServiceEntityRepository
         parent::__construct($registry, Commande::class);
     }
 
-    //    /**
-    //     * @return Commande[] Returns an array of Commande objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('c.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * Récupère les données du dashboard employé
+     * (Compteurs de commandes par statut + avis à modérer)
+     */
+    public function getDashboardData(): array
+    {
+        $sql = '
+            SELECT
+                (SELECT COUNT(*) FROM commande WHERE statut = "EN_ATTENTE") AS nb_en_attente,
+                (SELECT COUNT(*) FROM commande WHERE statut = "ACCEPTE") AS nb_acceptees,
+                (SELECT COUNT(*) FROM commande WHERE statut = "EN_PREPARATION") AS nb_en_preparation,
+                (SELECT COUNT(*) FROM commande WHERE statut = "EN_COURS_LIVRAISON") AS nb_en_livraison,
+                (SELECT COUNT(*) FROM commande WHERE statut = "RETOUR_MATERIEL") AS nb_retour_materiel,
+                (SELECT COUNT(*) FROM avis WHERE statut = "EN_ATTENTE") AS nb_avis_a_moderer
+        ';
 
-    //    public function findOneBySomeField($value): ?Commande
-    //    {
-    //        return $this->createQueryBuilder('c')
-    //            ->andWhere('c.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        return $this->getEntityManager()->getConnection()
+            ->executeQuery($sql)
+            ->fetchAssociative() ?: [];
+    }
+
+    /**
+     * Récupère les commandes actives (en cours de traitement)
+     */
+    public function findActiveOrders(): array
+    {
+        return $this->getEntityManager()->getConnection()
+            ->executeQuery('SELECT * FROM v_commandes_actives')
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Récupère les avis publiés
+     */
+    public function findPublishedReviews(): array
+    {
+        return $this->getEntityManager()->getConnection()
+            ->executeQuery('SELECT * FROM v_avis_publies')
+            ->fetchAllAssociative();
+    }
 }

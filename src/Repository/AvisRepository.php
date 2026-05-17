@@ -40,4 +40,15 @@ class AvisRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+    /**
+    * Récupère les avis publiés (validés)
+    */
+    public function findPublishedReviews(): array
+    {
+        return $this->getEntityManager()->getConnection()
+            ->executeQuery('SELECT * FROM v_avis_publies')
+            ->fetchAllAssociative();
+    }
+
+
 }

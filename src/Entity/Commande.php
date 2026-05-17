@@ -77,15 +77,13 @@ class Commande
     #[ORM\OneToMany(targetEntity: HistoriqueStatut::class, mappedBy: 'commande', cascade: ['remove'])]
     private Collection $historiques;
 
-    /** @var Collection<int, Avis> */
-    #[ORM\OneToMany(targetEntity: Avis::class, mappedBy: 'commande', cascade: ['remove'])]
-    private Collection $avis;
+    #[ORM\OneToOne(targetEntity: Avis::class, mappedBy: 'commande', cascade: ['remove'])]
+    private ?Avis $avis = null;
 
     public function __construct()
     {
         $this->dateCreation = new \DateTimeImmutable();
         $this->historiques = new ArrayCollection();
-        $this->avis = new ArrayCollection();
     }
 
     // ───────────────── GETTERS / SETTERS ─────────────────
@@ -289,30 +287,14 @@ class Commande
         return $this;
     }
 
-    /**
-     * @return Collection<int, Avis>
-     */
-    public function getAvis(): Collection
+    public function getAvis(): ?Avis
     {
         return $this->avis;
     }
 
-    public function addAvi(Avis $avi): static
+    public function setAvis(?Avis $avis): static
     {
-        if (!$this->avis->contains($avi)) {
-            $this->avis->add($avi);
-            $avi->setCommande($this);
-        }
-        return $this;
-    }
-
-    public function removeAvi(Avis $avi): static
-    {
-        if ($this->avis->removeElement($avi)) {
-            if ($avi->getCommande() === $this) {
-                $avi->setCommande(null);
-            }
-        }
+        $this->avis = $avis;
         return $this;
     }
 }

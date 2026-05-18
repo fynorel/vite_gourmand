@@ -13,7 +13,7 @@ class ResetToken
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'id_token')]
+    #[ORM\Column(name: 'id')]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'resetTokens')]

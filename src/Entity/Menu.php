@@ -18,7 +18,7 @@ class Menu
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'id_menu')]
+    #[ORM\Column(name: 'id')]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 150)]
@@ -60,8 +60,8 @@ class Menu
     /** @var Collection<int, Plat> */
     #[ORM\ManyToMany(targetEntity: Plat::class, inversedBy: 'menus')]
     #[ORM\JoinTable(name: 'menu_plat')]
-    #[ORM\JoinColumn(name: 'id_menu', referencedColumnName: 'id_menu', onDelete: 'CASCADE')]
-    #[ORM\InverseJoinColumn(name: 'id_plat', referencedColumnName: 'id_plat', onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_menu', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'id_plat', referencedColumnName: 'id', onDelete: 'CASCADE')]
     private Collection $plats;
     
     /** @var Collection<int, Commande> */

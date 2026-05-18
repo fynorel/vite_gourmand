@@ -19,8 +19,8 @@ class AvisController extends AbstractController
     public function list(AvisRepository $avisRepo): Response
     {
         // Récupérer les avis publiés
-        $avisPublies = $avisRepo->findBy(['statut' => 'VALIDE'], ['dateCreation' => 'DESC']);
-        
+        $avisPublies = $avisRepo->findPublishedReviews();
+    
         return $this->render('avis/list.html.twig', [
             'avis' => $avisPublies,
         ]);
@@ -49,7 +49,7 @@ class AvisController extends AbstractController
         
         // Vérifier que la commande est livrée
         if ($commande->getStatut() !== 'LIVRE') {
-            $this->addFlash('error', 'Vous pouvez only donner un avis pour une commande livrée');
+            $this->addFlash('error', 'Vous pouvez seulement donner un avis pour une commande livrée');
             return $this->redirectToRoute('app_commande_detail', ['id' => $commande->getId()]);
         }
         
@@ -82,7 +82,7 @@ class AvisController extends AbstractController
             return $this->redirectToRoute('app_commande_detail', ['id' => $commande->getId()]);
         }
         
-        return $this->render('avis/new.html.twig', [
+        return $this->render('avis/list.html.twig', [
             'commande' => $commande,
         ]);
     }

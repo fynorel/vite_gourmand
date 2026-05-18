@@ -1,0 +1,51 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Mes Commandes - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Mes Commandes</h1>
+
+{% if commandes is empty %}
+    <div class="alert alert-info">
+        Vous n'avez pas encore de commande.
+        <a href="{{ path('app_commande_new') }}">Créer une commande</a>
+    </div>
+{% else %}
+    <a href="{{ path('app_commande_new') }}" class="btn btn-primary mb-4">+ Nouvelle commande</a>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Menu</th>
+                    <th>Date de prestation</th>
+                    <th>Statut</th>
+                    <th>Prix</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for commande in commandes %}
+                    <tr>
+                        <td>#{{ commande.id }}</td>
+                        <td>{{ commande.menu.titre }}</td>
+                        <td>{{ commande.datePrestation|format_datetime('medium') }}</td>
+                        <td>
+                            <span class="badge bg-{% if commande.statut == 'EN_ATTENTE' %}warning{% elseif commande.statut == 'ACCEPTE' %}info{% elseif commande.statut == 'LIVRE' %}success{% elseif commande.statut == 'ANNULEE' %}danger{% else %}secondary{% endif %}">
+                                {{ commande.statut }}
+                            </span>
+                        </td>
+                        <td>{{ commande.prixTotal }}€</td>
+                        <td>
+                            <a href="{{ path('app_commande_detail', {'id': commande.id}) }}" class="btn btn-sm btn-info">
+                                Voir
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}

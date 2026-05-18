@@ -1,0 +1,90 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Dashboard - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<h1 class="mb-5">📊 Dashboard</h1>
+
+<!-- KPI Cards -->
+<div class="row mb-5">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">En attente</h5>
+                <p class="display-4">{{ dashboard.nb_en_attente }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Acceptées</h5>
+                <p class="display-4">{{ dashboard.nb_acceptees }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">En préparation</h5>
+                <p class="display-4">{{ dashboard.nb_en_preparation }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">En livraison</h5>
+                <p class="display-4">{{ dashboard.nb_en_livraison }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Retours matériel</h5>
+                <p class="display-4">{{ dashboard.nb_retour_materiel }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-secondary">
+            <div class="card-body">
+                <h5 class="card-title">Avis à modérer</h5>
+                <p class="display-4">{{ dashboard.nb_avis_a_moderer }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <a href="{{ path('app_dashboard_commandes') }}" class="btn btn-lg btn-primary w-100">
+            📦 Voir les commandes
+        </a>
+    </div>
+    <div class="col-md-6 mb-3">
+        <a href="{{ path('app_dashboard_menus') }}" class="btn btn-lg btn-success w-100">
+            🍽️ Voir les menus
+        </a>
+    </div>
+</div>
+
+{% if 'ROLE_ADMIN' in app.user.roles %}
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <a href="{{ path('app_dashboard_avis') }}" class="btn btn-lg btn-warning w-100">
+                💬 Modérer les avis
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

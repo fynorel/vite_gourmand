@@ -1,0 +1,67 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Accueil - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-8 mx-auto text-center">
+        <h1 class="display-4 mb-4">Bienvenue chez Vite & Gourmand</h1>
+        <p class="lead">Découvrez nos menus gourmands pour vos événements</p>
+        <a href="{{ path('app_menu_list') }}" class="btn btn-primary btn-lg">Voir nos menus</a>
+    </div>
+</div>
+
+<!-- Menus vedettes -->
+<h2 class="mb-4">Nos menus vedettes</h2>
+<div class="row mb-5">
+    {% for menu in menus|slice(0, 3) %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ menu.titre }}</h5>
+                    <p class="card-text">{{ menu.description|slice(0, 100) }}...</p>
+                    <p class="text-muted">
+                        <small>{{ menu.nb_personnes_min }} personnes minimum</small>
+                    </p>
+                </div>
+                <div class="card-footer bg-white">
+                    <strong class="text-primary">{{ menu.prix }}€</strong>
+                    <a href="{{ path('app_menu_detail', {'id': menu.id_menu}) }}" class="btn btn-sm btn-outline-primary float-end">
+                        Détails
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Avis clients -->
+<h2 class="mb-4">Avis de nos clients</h2>
+<div class="row">
+    {% if avis is empty %}
+        <div class="col-12">
+            <p class="text-muted text-center">Aucun avis pour le moment</p>
+        </div>
+    {% else %}
+        {% for avi in avis|slice(0, 3) %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            {% for i in 1..avi.note %}⭐{% endfor %}
+                        </h5>
+                        <p class="card-text">"{{ avi.commentaire }}"</p>
+                        <p class="text-muted">
+                            <small>{{ avi.auteur }} - {{ avi.menu_titre }}</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<div class="text-center mt-5">
+    <a href="{{ path('app_avis_list') }}" class="btn btn-secondary">Voir tous les avis</a>
+</div>
+{% endblock %}

@@ -11,73 +11,59 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/dashboard')]
-#[IsGranted('ROLE_EMPLOYE')]
+#[IsGranted('ROLE_ADMIN')]
 class DashboardController extends AbstractController
 {
     #[Route('', name: 'app_dashboard_index', methods: ['GET'])]
-    public function index(CommandeRepository $commandeRepo, MenuRepository $menuRepo): Response
+    public function index(
+        CommandeRepository $commandeRepo,
+        MenuRepository $menuRepo,
+        AvisRepository $avisRepo
+    ): Response
     {
-        // Récupérer les données du dashboard
         $dashboardData = $commandeRepo->getDashboardData();
-        
-        // Récupérer les commandes actives
-        $commandesActives = $commandeRepo->findActiveOrders();
-        
-        // Récupérer les menus avec le nombre de plats
-        $menusActifs = $menuRepo->findActiveMenus();
-        
+        $menus = $menuRepo->findActiveMenus();
+        $avis = $avisRepo->findPublishedReviews();
+
         return $this->render('dashboard/index.html.twig', [
             'dashboard' => $dashboardData,
-            'commandes_actives' => $commandesActives,
-            'menus_actifs' => $menusActifs,
+            'menus' => $menus,
+            'avis' => $avis,
         ]);
     }
 
     #[Route('/commandes', name: 'app_dashboard_commandes', methods: ['GET'])]
     public function commandes(CommandeRepository $commandeRepo): Response
     {
-        $commandesActives = $commandeRepo->findActiveOrders();
-        
+        $commandes = $commandeRepo->findActiveOrders();
+
         return $this->render('dashboard/commandes.html.twig', [
-            'commandes' => $commandesActives,
+            'commandes' => $commandes,
         ]);
     }
 
     #[Route('/menus', name: 'app_dashboard_menus', methods: ['GET'])]
     public function menus(MenuRepository $menuRepo): Response
     {
-        $menusActifs = $menuRepo->findActiveMenus();
+        $menus = $menuRepo->findActiveMenus();
         $ratings = $menuRepo->findMenuRatings();
-        
-        // Fusionner les ratings avec les menus
-        $menusWithRatings = array_map(function ($menu) use ($ratings) {
-            $rating = array_filter($ratings, fn($r) => $r['id_menu'] == $menu['id_menu']);
-            $ratingData = array_shift($rating) ?: [];
-            return array_merge($menu, $ratingData);
-        }, $menusActifs);
-        
+
         return $this->render('dashboard/menus.html.twig', [
-            'menus' => $menusWithRatings,
+            'menus' => $menus,
+            'ratings' => $ratings,
         ]);
     }
-
     #[Route('/avis', name: 'app_dashboard_avis', methods: ['GET'])]
-    #[IsGranted('ROLE_ADMIN')]
     public function avis(AvisRepository $avisRepo): Response
     {
-        // Récupérer les avis en attente de modération
-        $avisEnAttente = $avisRepo->findBy(['statut' => 'EN_ATTENTE'], ['dateCreation' => 'DESC']);
-        
+        $avis = $avisRepo->findPublishedReviews();
+
         return $this->render('dashboard/avis.html.twig', [
-            'avis' => $avisEnAttente,
+            'avis' => $avis,
         ]);
     }
 
-    #[Route('/avis/{id}/valider', name: 'app_dashboard_avis_valider', methods: ['POST'])]
-    #[IsGranted('ROLE_ADMIN')]
-    public function validerAvis(int $id, AvisRepository $avisRepo): Response
-    {
-        // À implémenter
-        return $this->redirectToRoute('app_dashboard_avis');
-    }
+
+
+
 }

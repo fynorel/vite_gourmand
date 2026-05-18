@@ -81,15 +81,8 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        $roles = [];
-        if ($this->role === 'ADMINISTRATEUR') {
-            $roles[] = 'ROLE_ADMIN';
-        } elseif ($this->role === 'EMPLOYE') {
-            $roles[] = 'ROLE_EMPLOYE';
-        } else {
-            $roles[] = 'ROLE_USER';
-        }
-        return $roles;
+       
+        return [$this->role];
     }
 
     public function getPassword(): ?string
@@ -180,6 +173,8 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->role;
     }
 
+
+   
     public function setRole(string $role): static
     {
         $this->role = $role;

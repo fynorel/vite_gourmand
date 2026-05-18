@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Utilisateur;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Service\ResetTokenService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -151,4 +152,91 @@ class SecurityController extends AbstractController
             'user' => $user,
         ]);
     }
+#[Route('/reset-password', name: 'app_reset_password', methods: ['GET', 'POST'])]
+public function resetPassword(
+    Request $request,
+    EntityManagerInterface $em
+): Response
+{
+    if ($this->getUser()) {
+        return $this->redirectToRoute('app_home');
+    }
+
+    if ($request->isMethod('POST')) {
+        $email = $request->request->get('email');
+
+        if (empty($email)) {
+            $this->addFlash('error', 'L\'email est obligatoire');
+            return $this->redirectToRoute('app_reset_password');
+        }
+
+        $user = $em->getRepository(Utilisateur::class)->findOneBy(['mail' => $email]);
+
+        // Ne pas révéler si l'email existe (sécurité)
+        if (!$user) {
+            $this->addFlash('success', 'Si cet email existe, un lien de réinitialisation vous sera envoyé');
+            return $this->redirectToRoute('app_login');
+        }
+
+        // TODO : créer le token et envoyer par email
+        $this->addFlash('success', 'Un lien de réinitialisation vous a été envoyé par email');
+        return $this->redirectToRoute('app_login');
+    }
+
+    return $this->render('security/reset_password.html.twig');
+}
+
+    #[Route('/reset-password/{token}', name: 'app_reset_password_confirm', methods: ['GET', 'POST'])]
+    public function resetPasswordConfirm(
+        string $token,
+        Request $request,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $passwordHasher,
+        ResetTokenService $resetTokenService
+    ): Response
+    {
+        $resetToken = $resetTokenService->getValidToken($token);
+
+        if (!$resetToken) {
+            $this->addFlash('error', 'Ce lien de réinitialisation n\'est pas valide ou a expiré');
+            return $this->redirectToRoute('app_login');
+        }
+
+        if ($request->isMethod('POST')) {
+            $newPassword = $request->request->get('password');
+            $passwordConfirm = $request->request->get('password_confirm');
+
+                if (empty($newPassword) || empty($passwordConfirm)) {
+                    $this->addFlash('error', 'Tous les champs sont obligatoires');
+                    return $this->redirectToRoute('app_reset_password_confirm', ['token' => $token]);
+                }
+
+                if ($newPassword !== $passwordConfirm) {
+                    $this->addFlash('error', 'Les mots de passe ne correspondent pas');
+                    return $this->redirectToRoute('app_reset_password_confirm', ['token' => $token]);
+                }
+
+            if (strlen($newPassword) < 10) {
+                $this->addFlash('error', 'Le mot de passe doit faire au moins 10 caractères');
+                return $this->redirectToRoute('app_reset_password_confirm', ['token' => $token]);
+            }
+
+            // Mettre à jour le mot de passe
+            $user = $resetToken->getUtilisateur();
+            $hashedPassword = $passwordHasher->hashPassword($user, $newPassword);
+            $user->setMdpHash($hashedPassword);
+
+            $resetTokenService->markTokenAsUsed($resetToken);
+            $em->flush();
+
+            $this->addFlash('success', 'Mot de passe réinitialisé ! Connectez-vous');
+            return $this->redirectToRoute('app_login');
+        }
+
+        return $this->render('security/reset_password_confirm.html.twig', [
+            'token' => $token,
+        ]);
+    }
+
+
 }

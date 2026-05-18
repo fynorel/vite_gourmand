@@ -30,7 +30,7 @@
                     <tr>
                         <td>#{{ commande.id }}</td>
                         <td>{{ commande.menu.titre }}</td>
-                        <td>{{ commande.datePrestation|format_datetime('medium') }}</td>
+                        <td>{{ commande.datePrestation|date('d/m/Y H:i') }}</td>
                         <td>
                             <span class="badge bg-{% if commande.statut == 'EN_ATTENTE' %}warning{% elseif commande.statut == 'ACCEPTE' %}info{% elseif commande.statut == 'LIVRE' %}success{% elseif commande.statut == 'ANNULEE' %}danger{% else %}secondary{% endif %}">
                                 {{ commande.statut }}

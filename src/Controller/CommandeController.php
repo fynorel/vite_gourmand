@@ -20,9 +20,8 @@ class CommandeController extends AbstractController
     public function list(CommandeRepository $commandeRepo): Response
     {
         // Récupérer les commandes de l'utilisateur actuellement connecté
-        $commandes = $commandeRepo->findBy([
-            'utilisateur' => $this->getUser()
-        ], ['dateCreation' => 'DESC']);
+        $commandes = $commandeRepo->findByUtilisateur($this->getUser()->getId());
+        
         
         return $this->render('commande/list.html.twig', [
             'commandes' => $commandes,

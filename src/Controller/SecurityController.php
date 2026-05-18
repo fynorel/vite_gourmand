@@ -3,9 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Utilisateur;
+use App\Form\RegisterType;
+use App\Service\EmailService;
+use App\Service\ResetTokenService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use App\Service\ResetTokenService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -34,68 +36,71 @@ class SecurityController extends AbstractController
         ]);
     }
 
+
+
+    // ...
+
     #[Route('/register', name: 'app_register', methods: ['GET', 'POST'])]
     public function register(
         Request $request,
         EntityManagerInterface $em,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        EmailService $emailService
     ): Response
     {
-        // Si l'utilisateur est déjà connecté, rediriger
         if ($this->getUser()) {
             return $this->redirectToRoute('app_home');
         }
-        
-        if ($request->isMethod('POST')) {
-            $prenom = $request->request->get('prenom');
-            $nom = $request->request->get('nom');
-            $email = $request->request->get('email');
-            $password = $request->request->get('password');
-            $passwordConfirm = $request->request->get('password_confirm');
-            
-            // Valider
-            if (empty($prenom) || empty($nom) || empty($email) || empty($password)) {
-                $this->addFlash('error', 'Tous les champs sont obligatoires');
+
+        $form = $this->createForm(RegisterType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            // Afficher les erreurs de validation
+            if (!$form->isValid()) {
+                foreach ($form->getErrors(true) as $error) {
+                    $this->addFlash('error', $error->getMessage());
+                }
                 return $this->redirectToRoute('app_register');
             }
-            
-            if ($password !== $passwordConfirm) {
-                $this->addFlash('error', 'Les mots de passe ne correspondent pas');
-                return $this->redirectToRoute('app_register');
-            }
-            
-            if (strlen($password) < 8) {
-                $this->addFlash('error', 'Le mot de passe doit faire au moins 8 caractères');
-                return $this->redirectToRoute('app_register');
-            }
-            
-            // Vérifier que l'email n'existe pas déjà
-            $existingUser = $em->getRepository(Utilisateur::class)->findOneBy(['mail' => $email]);
+
+            $data = $form->getData();
+            $plainPassword = $form->get('password')->getData();
+
+            $existingUser = $em->getRepository(Utilisateur::class)->findOneBy(['mail' => $data['mail']]);
             if ($existingUser) {
                 $this->addFlash('error', 'Cet email est déjà utilisé');
                 return $this->redirectToRoute('app_register');
             }
-            
-            // Créer l'utilisateur
+
             $user = new Utilisateur();
-            $user->setPrenom($prenom);
-            $user->setNom($nom);
-            $user->setMail($email);
-            $user->setRole('UTILISATEUR'); // Rôle par défaut
+            $user->setPrenom($data['prenom']);
+            $user->setNom($data['nom']);
+            $user->setMail($data['mail']);
+            $user->setGsm($data['gsm'] ?? null);
+            $user->setAdresse($data['adresse'] ?? null);
+            $user->setRole('UTILISATEUR');
             $user->setActif(true);
-            
-            // Hasher le mot de passe
-            $hashedPassword = $passwordHasher->hashPassword($user, $password);
+
+            $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
             $user->setMdpHash($hashedPassword);
-            
+
             $em->persist($user);
             $em->flush();
-            
-            $this->addFlash('success', 'Compte créé avec succès ! Connectez-vous');
+
+            try {
+                $emailService->sendWelcomeEmail($user);
+                $this->addFlash('success', 'Compte créé ! Un email de bienvenue vous a été envoyé');
+            } catch (\Exception $e) {
+                $this->addFlash('warning', 'Compte créé mais l\'email n\'a pas pu être envoyé : ' . $e->getMessage());
+            }
+
             return $this->redirectToRoute('app_login');
         }
-        
-        return $this->render('security/register.html.twig');
+
+        return $this->render('security/register.html.twig', [
+            'form' => $form,
+        ]);
     }
 
     #[Route('/logout', name: 'app_logout', methods: ['GET'])]
@@ -152,39 +157,58 @@ class SecurityController extends AbstractController
             'user' => $user,
         ]);
     }
-#[Route('/reset-password', name: 'app_reset_password', methods: ['GET', 'POST'])]
-public function resetPassword(
-    Request $request,
-    EntityManagerInterface $em
-): Response
-{
-    if ($this->getUser()) {
-        return $this->redirectToRoute('app_home');
-    }
 
-    if ($request->isMethod('POST')) {
-        $email = $request->request->get('email');
 
-        if (empty($email)) {
-            $this->addFlash('error', 'L\'email est obligatoire');
-            return $this->redirectToRoute('app_reset_password');
+    #[Route('/reset-password', name: 'app_reset_password', methods: ['GET', 'POST'])]
+    public function resetPassword(
+        Request $request,
+        EntityManagerInterface $em,
+        ResetTokenService $resetTokenService,
+        EmailService $emailService
+    ): Response
+    {
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_home');
         }
 
-        $user = $em->getRepository(Utilisateur::class)->findOneBy(['mail' => $email]);
+        if ($request->isMethod('POST')) {
+            $email = $request->request->get('email');
 
-        // Ne pas révéler si l'email existe (sécurité)
-        if (!$user) {
-            $this->addFlash('success', 'Si cet email existe, un lien de réinitialisation vous sera envoyé');
+            if (empty($email)) {
+                $this->addFlash('error', 'L\'email est obligatoire');
+                return $this->redirectToRoute('app_reset_password');
+            }
+
+            $user = $em->getRepository(Utilisateur::class)->findOneBy(['mail' => $email]);
+
+            // Ne pas révéler si l'email existe (sécurité)
+            if (!$user) {
+                $this->addFlash('success', 'Si cet email existe, un lien de réinitialisation vous sera envoyé');
+                return $this->redirectToRoute('app_login');
+            }
+
+            // 📧 Créer le token et envoyer l'email
+            try {
+                $resetToken = $resetTokenService->createResetToken($user);
+            
+                // Générer l'URL du lien de réinitialisation
+                $resetUrl = $this->generateUrl('app_reset_password_confirm', [
+                    'token' => $resetToken->getToken()
+                ], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL);
+            
+                // Envoyer l'email
+                $emailService->sendResetPasswordEmail($user, $resetUrl);
+            
+                $this->addFlash('success', 'Un lien de réinitialisation vous a été envoyé par email');
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Erreur lors de l\'envoi du mail : ' . $e->getMessage());
+            }
+
             return $this->redirectToRoute('app_login');
         }
 
-        // TODO : créer le token et envoyer par email
-        $this->addFlash('success', 'Un lien de réinitialisation vous a été envoyé par email');
-        return $this->redirectToRoute('app_login');
+        return $this->render('security/reset_password.html.twig');
     }
-
-    return $this->render('security/reset_password.html.twig');
-}
 
     #[Route('/reset-password/{token}', name: 'app_reset_password_confirm', methods: ['GET', 'POST'])]
     public function resetPasswordConfirm(

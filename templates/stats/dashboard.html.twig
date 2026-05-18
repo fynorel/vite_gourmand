@@ -1,0 +1,79 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Statistiques - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-12">
+        <h2 class="mb-4">📊 Statistiques des Commandes</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Commandes par Menu</h5>
+                <canvas id="chartMenus"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Chiffre d'affaires par Menu</h5>
+                <canvas id="chartRevenue"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<script>
+    const labels = {{ labels|raw }};
+    const data = {{ data|raw }};
+
+    // Graphique des commandes
+    const ctxMenus = document.getElementById('chartMenus').getContext('2d');
+    new Chart(ctxMenus, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Nombre de commandes',
+                data: data,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // Graphique du chiffre d'affaires
+    const ctxRevenue = document.getElementById('chartRevenue').getContext('2d');
+    new Chart(ctxRevenue, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.5)',
+                    'rgba(54, 162, 235, 0.5)',
+                    'rgba(255, 206, 86, 0.5)',
+                    'rgba(75, 192, 192, 0.5)',
+                    'rgba(153, 102, 255, 0.5)',
+                ]
+            }]
+        },
+        options: { responsive: true }
+    });
+</script>
+{% endblock %}

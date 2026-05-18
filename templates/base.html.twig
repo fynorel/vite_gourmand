@@ -69,11 +69,17 @@
                             </li>
                         {% endif %}
                         
-                        {% if 'ROLE_EMPLOYE' in app.user.roles %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ path('app_dashboard_index') }}">Dashboard</a>
-                            </li>
-                        {% endif %}
+                            {% if 'ROLE_EMPLOYE' in app.user.roles or 'ROLE_ADMIN' in app.user.roles %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ path('app_dashboard_index') }}">Dashboard</a>
+                                </li>
+                            {% endif %}
+
+                            {% if 'ROLE_ADMIN' in app.user.roles %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ path('app_stats_dashboard') }}">📊 Statistiques</a>
+                                </li>
+                            {% endif %}
                         
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">

@@ -30,7 +30,17 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark 
+    {% if not app.user %}
+        bg-dark
+    {% elseif 'ROLE_ADMIN' in app.user.roles %}
+        bg-danger
+    {% elseif 'ROLE_EMPLOYE' in app.user.roles %}
+        bg-success
+    {% else %}
+        bg-primary
+    {% endif %}
+">
         <div class="container">
             <a class="navbar-brand" href="{{ path('app_home') }}">🍽️ Vite & Gourmand</a>
             

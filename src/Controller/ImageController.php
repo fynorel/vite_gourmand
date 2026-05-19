@@ -13,8 +13,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\HttpFoundation\Response;
 
-#[Route('/admin/images')]
-#[IsGranted('ROLE_ADMIN')]
+#[Route('/menu/images')]
+#[IsGranted('ROLE_EMPLOYE')]
 class ImageController extends AbstractController
 {
     #[Route('/upload', name: 'app_image_upload', methods: ['POST'])]

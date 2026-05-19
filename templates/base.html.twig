@@ -66,7 +66,7 @@
                     
                     {% if app.user %}
 
-                        {% if app.user and 'ROLE_ADMIN' not in app.user.roles %}
+                        {% if app.user and 'ROLE_USER' in app.user.roles %}                            
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ path('app_commande_list') }}">Mes Commandes</a>
                             </li>

@@ -1,0 +1,116 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Ajouter des images - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-8">
+        <h2>📸 Ajouter des images de menus</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Sélectionner un menu</h5>
+                <select id="menuSelect" class="form-select mb-3">
+                    <option>-- Choisir un menu --</option>
+                </select>
+
+                <h5 class="card-title mt-4">Uploader une image</h5>
+                <form id="imageForm">
+                    <input type="file" id="imageFile" accept="image/*" class="form-control mb-2" required>
+                    <input type="text" id="imageAlt" class="form-control mb-2" placeholder="Texte alternatif">
+                    <button type="submit" class="btn btn-primary w-100">Uploader</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Images du menu</h5>
+                <div id="imagesList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Charger les menus
+fetch('/admin/menus/list')
+    .then(r => r.json())
+    .then(menus => {
+        const select = document.getElementById('menuSelect');
+        menus.forEach(menu => {
+            const option = document.createElement('option');
+            option.value = menu.id;
+            option.textContent = menu.titre;
+            select.appendChild(option);
+        });
+    });
+
+// Charger les images quand on sélectionne un menu
+document.getElementById('menuSelect').addEventListener('change', async (e) => {
+    const menuId = e.target.value;
+    if (!menuId) return;
+
+    const response = await fetch(`/admin/images/list/${menuId}`);
+    const images = await response.json();
+
+    const list = document.getElementById('imagesList');
+    list.innerHTML = '';
+    images.forEach(img => {
+        const div = document.createElement('div');
+        div.className = 'mb-3';
+        div.innerHTML = `
+            <img src="${img.url}" style="max-width: 100%;" class="mb-2">
+            <p>${img.alt}</p>
+            <button class="btn btn-sm btn-danger" onclick="deleteImage(${img.id})">Supprimer</button>
+        `;
+        list.appendChild(div);
+    });
+});
+
+// Upload image
+document.getElementById('imageForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const menuId = document.getElementById('menuSelect').value;
+    const file = document.getElementById('imageFile').files[0];
+    const alt = document.getElementById('imageAlt').value || 'Image du menu';
+
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('menu_id', menuId);
+    formData.append('alt', alt);
+
+    const response = await fetch('{{ path('app_image_upload') }}', {
+        method: 'POST',
+        body: formData
+    });
+
+    const data = await response.json();
+    if (data.path) {
+        alert('Image uploadée !');
+        document.getElementById('imageForm').reset();
+        document.getElementById('menuSelect').dispatchEvent(new Event('change'));
+    } else {
+        alert('Erreur: ' + data.error);
+    }
+});
+
+async function deleteImage(id) {
+    if (!confirm('Supprimer cette image ?')) return;
+
+    const response = await fetch(`/admin/images/delete/${id}`, {
+        method: 'DELETE'
+    });
+
+    if (response.ok) {
+        document.getElementById('menuSelect').dispatchEvent(new Event('change'));
+    }
+}
+</script>
+{% endblock %}

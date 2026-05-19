@@ -78,6 +78,34 @@
     </div>
 </div>
 
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h3>Gestion</h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">📸 Gérer les images</h5>
+                <p class="card-text">Ajouter, modifier ou supprimer les images des menus</p>
+                <a href="{{ path('app_admin_images') }}" class="btn btn-primary">Gérer les images</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">👥 Gérer les employés</h5>
+                <p class="card-text">Créer, activer ou désactiver les comptes employés</p>
+                <a href="{{ path('app_admin_employees_list') }}" class="btn btn-primary">Gérer les employés</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% if 'ROLE_ADMIN' in app.user.roles %}
     <div class="row mt-3">
         <div class="col-md-6">

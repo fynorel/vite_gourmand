@@ -71,6 +71,12 @@ class Commande
     #[ORM\JoinColumn(name: 'annule_par', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Utilisateur $annulePar = null;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private ?bool $materielPrete = false;
+
+    #[ORM\Column(name: 'date_retour_attendue', type: 'date', nullable: true)]
+    private ?\DateTimeInterface $dateRetourAttendueDate = null;
+
     // ───────────────── RELATIONS ─────────────────
 
     /** @var Collection<int, HistoriqueStatut> */
@@ -295,6 +301,29 @@ class Commande
     public function setAvis(?Avis $avis): static
     {
         $this->avis = $avis;
+        return $this;
+    }
+
+
+    public function isMaterielPrete(): ?bool
+    {
+        return $this->materielPrete;
+    }
+
+    public function setMaterielPrete(bool $materielPrete): static
+    {
+        $this->materielPrete = $materielPrete;
+        return $this;
+    }
+
+    public function getDateRetourAttendueDate(): ?\DateTimeInterface
+    {
+        return $this->dateRetourAttendueDate;
+    }
+
+    public function setDateRetourAttendueDate(?\DateTimeInterface $dateRetourAttendueDate): static
+    {
+        $this->dateRetourAttendueDate = $dateRetourAttendueDate;
         return $this;
     }
 }

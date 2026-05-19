@@ -13,11 +13,21 @@ class CommandeRepository extends ServiceEntityRepository
         parent::__construct($registry, Commande::class);
     }
 
-    public function getDashboardData(): array
-    {
-        $sql = 'SELECT COUNT(*) as total FROM commande';
-        return $this->getEntityManager()->getConnection()->executeQuery($sql)->fetchAllAssociative();
-    }
+public function getDashboardData(): array
+{
+    $sql = 'SELECT 
+        (SELECT COUNT(*) FROM commande WHERE statut = "EN_ATTENTE") AS nb_en_attente,
+        (SELECT COUNT(*) FROM commande WHERE statut = "ACCEPTE") AS nb_acceptees,
+        (SELECT COUNT(*) FROM commande WHERE statut = "EN_PREPARATION") AS nb_en_preparation,
+        (SELECT COUNT(*) FROM commande WHERE statut = "EN_COURS_LIVRAISON") AS nb_en_livraison,
+        (SELECT COUNT(*) FROM commande WHERE statut = "EN_ATTENTE_RETOUR_MATERIEL") AS nb_retour_materiel,
+        (SELECT COUNT(*) FROM commande WHERE statut = "TERMINEE") AS nb_terminees,
+        (SELECT COUNT(*) FROM commande WHERE statut = "ANNULEE") AS nb_annulees,
+        (SELECT COUNT(*) FROM avis WHERE statut != "VALIDE") AS nb_avis_a_moderer
+    ';
+    
+    return $this->getEntityManager()->getConnection()->executeQuery($sql)->fetchAssociative() ?: [];
+}
 
     public function findActiveOrders(): array
     {

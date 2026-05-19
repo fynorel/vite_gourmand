@@ -1,0 +1,44 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Modérer les avis - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-12">
+        <h2>💬 Modérer les avis</h2>
+    </div>
+</div>
+
+{% if avis|length == 0 %}
+    <div class="alert alert-info">
+        Aucun avis à modérer.
+    </div>
+{% else %}
+    <div class="row">
+        {% for review in avis %}
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ review.utilisateur.prenom }} {{ review.utilisateur.nom }}</h5>
+                        <p class="card-text">
+                            <strong>Note :</strong> 
+                            {% for i in 1..review.note %}⭐{% endfor %}
+                        </p>
+                        <p class="card-text">{{ review.commentaire }}</p>
+                        <p class="text-muted">{{ review.dateCreation|date('d/m/Y H:i') }}</p>
+                        
+                        <div class="btn-group" role="group">
+                            <form method="post" action="#" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-success">Valider</button>
+                            </form>
+                            <form method="post" action="#" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-danger">Refuser</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Entity\Commande;
 use App\Repository\CommandeRepository;
 use App\Repository\MenuRepository;
+use App\Service\CommandeStatService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -40,7 +41,8 @@ class CommandeController extends AbstractController
         Request $request,
         MenuRepository $menuRepo,
         EntityManagerInterface $em,
-        MailerInterface $mailer
+        MailerInterface $mailer,
+        CommandeStatService $statService
     ): Response {
         // Pré-sélection d'un menu depuis la vue détaillée
         $menuId = $request->query->get('menuId') ?? $request->request->get('menu_id');
@@ -111,6 +113,8 @@ class CommandeController extends AbstractController
 
             $em->persist($commande);
             $em->flush();
+            // Enregistrer dans MongoDB pour les statistiques
+            $statService->recordCommandeStat($commande);
 
             // Mail de confirmation
             $email = (new Email())

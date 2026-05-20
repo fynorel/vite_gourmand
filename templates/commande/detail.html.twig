@@ -90,7 +90,7 @@
     {% if commande.statut == 'TERMINEE' and commande.avis is null %}
     <div class="alert alert-info">
         <strong>Votre prestation est terminée !</strong> Donnez votre avis sur ce menu.
-        <a href="{{ path('app_avis_new', {commandeId: commande.id}) }}" class="btn btn-sm btn-primary ms-2">
+        <a href="{{ path('app_avis_new', {id: commande.id}) }}" class="btn btn-sm btn-primary ms-2">
             ⭐ Laisser un avis
         </a>
     </div>

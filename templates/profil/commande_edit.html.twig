@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la commande #{{ commande.id }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-md-6">
+
+    <h1 class="mb-4">Modifier la commande #{{ commande.id }}</h1>
+    <p class="text-muted">Menu : <strong>{{ commande.menu.titre }}</strong> (non modifiable)</p>
+
+    <form method="POST" action="{{ path('app_profile_commande_edit', {id: commande.id}) }}">
+
+        <div class="mb-3">
+            <label for="nb_personnes" class="form-label">
+                Nombre de personnes <span class="text-danger">*</span>
+                <small class="text-muted">(minimum {{ commande.menu.nbPersonnesMin }})</small>
+            </label>
+            <input type="number" class="form-control" id="nb_personnes" name="nb_personnes"
+                   min="{{ commande.menu.nbPersonnesMin }}" value="{{ commande.nbPersonnes }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="adresse" class="form-label">Adresse de livraison <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="adresse" name="adresse"
+                   value="{{ commande.adresse }}" required>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="date_prestation" class="form-label">Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="date_prestation" name="date_prestation"
+                       value="{{ commande.datePrestation|date('Y-m-d') }}"
+                       min="{{ 'now'|date('Y-m-d') }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="heure_prestation" class="form-label">Heure <span class="text-danger">*</span></label>
+                <input type="time" class="form-control" id="heure_prestation" name="heure_prestation"
+                       value="{{ commande.datePrestation|date('H:i') }}" required>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-warning">Enregistrer les modifications</button>
+            <a href="{{ path('app_profile') }}" class="btn btn-secondary">Annuler</a>
+        </div>
+
+    </form>
+</div>
+</div>
+{% endblock %}

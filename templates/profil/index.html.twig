@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Profil - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<div class="row">
+
+    {# ── INFOS UTILISATEUR ── #}
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">👤 Mon compte</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-3">
+                    <li class="mb-2"><strong>Nom :</strong> {{ user.prenom }} {{ user.nom }}</li>
+                    <li class="mb-2"><strong>Email :</strong> {{ user.mail }}</li>
+                    <li class="mb-2"><strong>GSM :</strong> {{ user.gsm ?: 'Non renseigné' }}</li>
+                    <li class="mb-2"><strong>Adresse :</strong> {{ user.adresse ?: 'Non renseignée' }}</li>
+                    <li class="mb-2"><strong>Membre depuis :</strong> {{ user.dateCreation|date('d/m/Y') }}</li>
+                </ul>
+                <a href="{{ path('app_profile_edit') }}" class="btn btn-outline-primary w-100">
+                    ✏️ Modifier mes informations
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# ── MES COMMANDES ── #}
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>📦 Mes commandes</h2>
+            <a href="{{ path('app_menu_list') }}" class="btn btn-primary btn-sm">+ Nouvelle commande</a>
+        </div>
+
+        {% if commandes is empty %}
+            <div class="alert alert-info">Vous n'avez pas encore de commande.</div>
+        {% else %}
+            {% for commande in commandes %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">{{ commande.menu.titre }}</h6>
+                            <small class="text-muted">
+                                📅 {{ commande.datePrestation|date('d/m/Y à H:i') }} —
+                                👥 {{ commande.nbPersonnes }} personnes —
+                                💶 {{ commande.prixTotal }} €
+                            </small>
+                        </div>
+                        <div>
+                            {% set colors = {
+                                'EN_ATTENTE': 'warning',
+                                'ACCEPTE': 'info',
+                                'EN_PREPARATION': 'primary',
+                                'EN_COURS_LIVRAISON': 'primary',
+                                'LIVRE': 'success',
+                                'EN_ATTENTE_RETOUR_MATERIEL': 'danger',
+                                'TERMINEE': 'success',
+                                'ANNULEE': 'secondary'
+                            } %}
+                            <span class="badge bg-{{ colors[commande.statut] ?? 'secondary' }}">
+                                {{ commande.statut|replace({'_': ' '}) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {# Suivi si acceptée #}
+                    {% if commande.statut not in ['EN_ATTENTE', 'ANNULEE'] and commande.historiques is not empty %}
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            Dernière mise à jour :
+                            {{ commande.historiques|last.changedAt|date('d/m/Y à H:i') }}
+                        </small>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-2 d-flex gap-2 flex-wrap">
+                        <a href="{{ path('app_commande_detail', {id: commande.id}) }}"
+                           class="btn btn-sm btn-outline-primary">Voir le détail</a>
+
+                        {% if commande.statut == 'EN_ATTENTE' %}
+                            <a href="{{ path('app_profile_commande_edit', {id: commande.id}) }}"
+                               class="btn btn-sm btn-outline-warning">Modifier</a>
+
+                            <form method="POST"
+                                  action="{{ path('app_commande_cancel', {id: commande.id}) }}"
+                                  onsubmit="return confirm('Confirmer l\'annulation ?')" class="d-inline">
+                                <input type="hidden" name="_token"
+                                       value="{{ csrf_token('cancel_' ~ commande.id) }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Annuler</button>
+                            </form>
+                        {% endif %}
+
+                        {% if commande.statut == 'TERMINEE' and commande.avis is null %}
+                            <a href="{{ path('app_avis_new', {id: commande.id}) }}"
+                               class="btn btn-sm btn-outline-success">⭐ Laisser un avis</a>
+                        {% elseif commande.avis is not null %}
+                            <span class="badge bg-light text-dark border">
+                                Avis donné : {{ commande.avis.note }}/5
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

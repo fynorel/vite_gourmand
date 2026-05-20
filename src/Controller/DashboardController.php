@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Entity\Commande;
+use App\Entity\Avis;
 use App\Entity\HistoriqueStatut;
 use App\Repository\AvisRepository;
 use App\Repository\CommandeRepository;
@@ -190,10 +191,35 @@ class DashboardController extends AbstractController
     #[Route('/avis', name: 'app_dashboard_avis', methods: ['GET'])]
     public function avis(AvisRepository $avisRepo): Response
     {
-        $avis = $avisRepo->findPublishedReviews();
-
+        $avis = $avisRepo->findPendingReviews();
+        
         return $this->render('dashboard/avis.html.twig', [
             'avis' => $avis,
         ]);
+    }
+
+
+    #[Route('/avis/{id}/valider', name: 'app_dashboard_avis_valider', methods: ['POST'])]
+    public function validerAvis(Avis $avis, EntityManagerInterface $em): Response
+    {
+        $avis->setStatut('VALIDE');
+        $avis->setValidatePar($this->getUser());
+        $avis->setDateModeration(new \DateTimeImmutable());
+        $em->flush();
+
+        $this->addFlash('success', 'Avis validé.');
+        return $this->redirectToRoute('app_dashboard_avis');
+    }
+
+    #[Route('/avis/{id}/refuser', name: 'app_dashboard_avis_refuser', methods: ['POST'])]
+    public function refuserAvis(Avis $avis, EntityManagerInterface $em): Response
+    {
+        $avis->setStatut('REFUSE');
+        $avis->setValidatePar($this->getUser());
+        $avis->setDateModeration(new \DateTimeImmutable());
+        $em->flush();
+
+        $this->addFlash('success', 'Avis refusé.');
+        return $this->redirectToRoute('app_dashboard_avis');
     }
 }

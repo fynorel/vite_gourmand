@@ -28,11 +28,15 @@
                         <p class="text-muted">{{ review.dateCreation|date('d/m/Y H:i') }}</p>
                         
                         <div class="btn-group" role="group">
-                            <form method="post" action="#" style="display: inline;">
-                                <button type="submit" class="btn btn-sm btn-success">Valider</button>
+                            <form method="POST"
+                                action="{{ path('app_dashboard_avis_valider', {id: review.id}) }}"
+                                class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-success">✅ Valider</button>
                             </form>
-                            <form method="post" action="#" style="display: inline;">
-                                <button type="submit" class="btn btn-sm btn-danger">Refuser</button>
+                            <form method="POST"
+                                action="{{ path('app_dashboard_avis_refuser', {id: review.id}) }}"
+                                class="d-inline ms-1">
+                                <button type="submit" class="btn btn-sm btn-danger">❌ Refuser</button>
                             </form>
                         </div>
                     </div>

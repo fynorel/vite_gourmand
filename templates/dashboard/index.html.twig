@@ -106,16 +106,17 @@
         </div>
     {% endif %}    
 </div>
-
-{% if 'ROLE_ADMIN' in app.user.roles %}
-    <div class="row mt-3">
-        <div class="col-md-6">
-            <a href="{{ path('app_dashboard_avis') }}" class="btn btn-lg btn-warning w-100">
-                💬 Modérer les avis
-            </a>
-        </div>
+{# Accessible à l'employé ET à l'admin #}
+<div class="row mt-3">
+    <div class="col-md-6">
+        <a href="{{ path('app_dashboard_avis') }}" class="btn btn-lg btn-warning w-100">
+            💬 Modérer les avis
+            {% if dashboard.nb_avis_a_moderer > 0 %}
+                <span class="badge bg-danger ms-1">{{ dashboard.nb_avis_a_moderer }}</span>
+            {% endif %}
+        </a>
     </div>
-{% endif %}
+</div>
 
 <div class="row mt-5">
     <div class="col-md-12">

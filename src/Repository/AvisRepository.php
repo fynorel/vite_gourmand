@@ -50,5 +50,18 @@ class AvisRepository extends ServiceEntityRepository
             ->fetchAllAssociative();
     }
 
+    /**
+    * Récupère les avis en attente de modération
+    */
+    public function findPendingReviews(): array
+    {
+        return $this->createQueryBuilder('a')
+            ->where('a.statut = :statut')
+            ->setParameter('statut', 'EN_ATTENTE')
+            ->orderBy('a.dateCreation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
 
 }

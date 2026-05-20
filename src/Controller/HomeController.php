@@ -65,4 +65,17 @@ class HomeController extends AbstractController
 
         return $this->render('home/contact.html.twig');
     }
+    #[Route('/mentions-legales', name: 'app_mentions_legales', methods: ['GET'])]
+    public function mentionsLegales(): Response
+    {
+        return $this->render('pages/mentions_legales.html.twig');
+    }
+
+    #[Route('/conditions-generales-de-vente', name: 'app_cgv', methods: ['GET'])]
+    public function cgv(): Response
+    {
+        return $this->render('pages/cgv.html.twig');
+    }
+
+
 }

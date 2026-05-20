@@ -17,7 +17,7 @@ class Horaire
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Entreprise::class, inversedBy: 'horaires', cascade: ['remove'])]
-    #[ORM\JoinColumn(name: 'id_entreprise', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_entreprise', referencedColumnName: 'id_entreprise', nullable: false, onDelete: 'CASCADE')]
     private ?Entreprise $entreprise = null;
 
     #[ORM\Column(name: 'jour_semaine', type: 'integer')]

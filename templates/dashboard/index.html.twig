@@ -116,4 +116,32 @@
         </div>
     </div>
 {% endif %}
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h3>Gestion Menus & Plats</h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">🍽️ Gérer les menus</h5>
+                <p class="card-text">Ajouter, modifier ou supprimer les menus</p>
+                <a href="{{ path('app_menu_management_list') }}" class="btn btn-primary">Gérer les menus</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">🥘 Gérer les plats</h5>
+                <p class="card-text">Ajouter, modifier ou supprimer les plats</p>
+                <a href="{{ path('app_plat_management_list') }}" class="btn btn-primary">Gérer les plats</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

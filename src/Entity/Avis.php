@@ -19,7 +19,7 @@ class Avis
     private ?int $id = null;
 
     #[ORM\OneToOne(targetEntity: Commande::class, inversedBy: 'avis')]
-    #[ORM\JoinColumn(name: 'id_commande', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_commande', referencedColumnName: 'id_commande', nullable: false, onDelete: 'CASCADE')]
     private ?Commande $commande = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class)]

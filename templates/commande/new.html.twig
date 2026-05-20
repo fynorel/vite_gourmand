@@ -1,48 +1,221 @@
-{% extends "base.html.twig" %}
+{% extends 'base.html.twig' %}
 
-{% block title %}Nouvelle Commande - Vite & Gourmand{% endblock %}
+{% block title %}Commander un menu - Vite & Gourmand{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mb-5">
-    <div class="col-md-6">
-        <h2 class="mb-4">Créer une commande</h2>
+<div class="row justify-content-center">
+<div class="col-md-8">
 
-        <form method="post" action="{{ path('app_commande_new') }}">
-            <div class="mb-3">
-                <label for="menu_id" class="form-label">Menu *</label>
-                <select id="menu_id" name="menu_id" class="form-select" required>
-                    <option value="">-- Sélectionner un menu --</option>
-                    {% for menu in menus %}
-                        <option value="{{ menu.id }}">
-                            {{ menu.titre }} - {{ menu.prix }}€
-                        </option>
-                    {% endfor %}
-                </select>
+    <h1 class="mb-4">Passer une commande</h1>
+
+    <form method="POST" action="{{ path('app_commande_new') }}" id="commandeForm">
+
+        {# ── ÉTAPE 1 : INFOS CLIENT (pré-remplies) ── #}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">1. Vos informations</h5>
             </div>
-
-            <div class="mb-3">
-                <label for="nb_personnes" class="form-label">Nombre de personnes *</label>
-                <input type="number" id="nb_personnes" name="nb_personnes" class="form-control" 
-                       min="1" required>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Prénom</label>
+                        <input type="text" class="form-control" value="{{ user.prenom }}" disabled>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nom</label>
+                        <input type="text" class="form-control" value="{{ user.nom }}" disabled>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="{{ user.mail }}" disabled>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">GSM</label>
+                        <input type="text" class="form-control" value="{{ user.gsm }}" disabled>
+                    </div>
+                </div>
             </div>
-
-            <div class="mb-3">
-                <label for="adresse" class="form-label">Adresse de livraison *</label>
-                <textarea id="adresse" name="adresse" class="form-control" rows="3" required></textarea>
-            </div>
-
-            <div class="mb-3">
-                <label for="date_prestation" class="form-label">Date de prestation *</label>
-                <input type="datetime-local" id="date_prestation" name="date_prestation" 
-                       class="form-control" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100">Créer la commande</button>
-        </form>
-
-        <div class="mt-3">
-            <a href="{{ path('app_menu_list') }}" class="btn btn-secondary w-100">Retour au catalogue</a>
         </div>
-    </div>
+
+        {# ── ÉTAPE 2 : MENU ── #}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">2. Choix du menu</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="menu_id" class="form-label">Menu <span class="text-danger">*</span></label>
+                    <select class="form-select" id="menu_id" name="menu_id" required>
+                        <option value="">-- Choisir un menu --</option>
+                        {% for menu in menus %}
+                            {% if menu.stock > 0 %}
+                            <option value="{{ menu.id }}"
+                                    data-prix="{{ menu.prix }}"
+                                    data-min="{{ menu.nbPersonnesMin }}"
+                                    {{ menu_selected and menu_selected.id == menu.id ? 'selected' }}>
+                                {{ menu.titre }} — {{ menu.prix }} € (min. {{ menu.nbPersonnesMin }} pers.)
+                            </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="nb_personnes" class="form-label">
+                        Nombre de personnes <span class="text-danger">*</span>
+                        <small class="text-muted" id="nb_min_info"></small>
+                    </label>
+                    <input type="number" class="form-control" id="nb_personnes" name="nb_personnes"
+                           min="1" required>
+                    <div class="form-text text-success" id="reduction_info" style="display:none;">
+                        🎉 Réduction de 10% appliquée !
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── ÉTAPE 3 : PRESTATION ── #}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">3. Lieu et date de la prestation</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="adresse" class="form-label">Adresse de livraison <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="adresse" name="adresse"
+                           value="{{ user.adresse }}"
+                           placeholder="Ex : 12 rue des Fleurs, Bordeaux" required>
+                    <div class="form-text">
+                        ℹ️ Si l'adresse n'est pas à Bordeaux, des frais de livraison s'appliquent (5€ + 0,59€/km).
+                    </div>
+                </div>
+
+                <input type="hidden" id="distance_km" name="distance_km" value="0">
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="date_prestation" class="form-label">Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="date_prestation" name="date_prestation"
+                               min="{{ "now"|date("Y-m-d") }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="heure_prestation" class="form-label">Heure souhaitée <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control" id="heure_prestation" name="heure_prestation"
+                               value="12:00" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── RÉCAPITULATIF PRIX ── #}
+        <div class="card shadow-sm mb-4 border-primary" id="recap_prix" style="display:none;">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">💶 Récapitulatif du prix</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td>Prix du menu</td>
+                        <td class="text-end fw-bold" id="recap_prix_menu">—</td>
+                    </tr>
+                    <tr id="recap_reduction_row" style="display:none;" class="text-success">
+                        <td>Réduction (10%)</td>
+                        <td class="text-end fw-bold" id="recap_reduction">—</td>
+                    </tr>
+                    <tr id="recap_livraison_row" style="display:none;">
+                        <td>Frais de livraison</td>
+                        <td class="text-end fw-bold" id="recap_livraison">—</td>
+                    </tr>
+                    <tr class="border-top">
+                        <td class="fw-bold fs-5">Total</td>
+                        <td class="text-end fw-bold fs-5 text-primary" id="recap_total">—</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">✅ Confirmer la commande</button>
+            <a href="{{ path('app_menu_list') }}" class="btn btn-secondary btn-lg">Annuler</a>
+        </div>
+
+    </form>
 </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+const menuSelect    = document.getElementById('menu_id');
+const nbPersonnes   = document.getElementById('nb_personnes');
+const adresseInput  = document.getElementById('adresse');
+const reductionInfo = document.getElementById('reduction_info');
+const nbMinInfo     = document.getElementById('nb_min_info');
+const recapPrix     = document.getElementById('recap_prix');
+
+// Met à jour le nb minimum selon le menu choisi
+function updateNbMin() {
+    const option = menuSelect.options[menuSelect.selectedIndex];
+    if (option && option.dataset.min) {
+        const min = parseInt(option.dataset.min);
+        nbPersonnes.min = min;
+        nbMinInfo.textContent = '(minimum ' + min + ' personnes)';
+    }
+}
+
+// Calcul du prix via AJAX
+function calculerPrix() {
+    const menuId  = menuSelect.value;
+    const nb      = parseInt(nbPersonnes.value);
+    const adresse = adresseInput.value;
+
+    if (!menuId || !nb || nb < 1) return;
+
+    const formData = new FormData();
+    formData.append('menu_id',    menuId);
+    formData.append('nb_personnes', nb);
+    formData.append('adresse',    adresse);
+    formData.append('distance_km', document.getElementById('distance_km').value);
+
+    fetch('{{ path('app_commande_calcul_prix') }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) return;
+
+        recapPrix.style.display = 'block';
+        document.getElementById('recap_prix_menu').textContent = data.prix_menu + ' €';
+        document.getElementById('recap_total').textContent     = data.prix_total + ' €';
+
+        // Réduction
+        const reductionRow = document.getElementById('recap_reduction_row');
+        if (parseFloat(data.reduction) > 0) {
+            reductionRow.style.display = '';
+            document.getElementById('recap_reduction').textContent = '- ' + data.reduction + ' €';
+            reductionInfo.style.display = '';
+        } else {
+            reductionRow.style.display = 'none';
+            reductionInfo.style.display = 'none';
+        }
+
+        // Frais livraison
+        const livraisonRow = document.getElementById('recap_livraison_row');
+        if (parseFloat(data.frais_livraison) > 0) {
+            livraisonRow.style.display = '';
+            document.getElementById('recap_livraison').textContent = '+ ' + data.frais_livraison + ' €';
+        } else {
+            livraisonRow.style.display = 'none';
+        }
+    });
+}
+
+menuSelect.addEventListener('change', () => { updateNbMin(); calculerPrix(); });
+nbPersonnes.addEventListener('input', calculerPrix);
+adresseInput.addEventListener('blur', calculerPrix);
+
+// Init si menu pré-sélectionné
+if (menuSelect.value) { updateNbMin(); }
+</script>
 {% endblock %}

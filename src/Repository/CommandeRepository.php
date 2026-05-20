@@ -48,4 +48,26 @@ public function getDashboardData(): array
             ->getQuery()
             ->getResult();
     }
+
+    public function findWithFilters(?string $statut, ?string $search): array
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->join('c.utilisateur', 'u')
+            ->join('c.menu', 'm')
+            ->orderBy('c.dateCreation', 'DESC');
+ 
+        if ($statut) {
+            $qb->andWhere('c.statut = :statut')
+            ->setParameter('statut', $statut);
+        }
+ 
+        if ($search) {
+            $qb->andWhere('u.nom LIKE :search OR u.prenom LIKE :search OR u.mail LIKE :search')
+            ->setParameter('search', '%' . $search . '%');
+        }
+ 
+        return $qb->getQuery()->getResult();
+    }
+ 
+
 }

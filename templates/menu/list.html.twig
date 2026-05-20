@@ -1,76 +1,138 @@
-{% extends "base.html.twig" %}
+{% extends 'base.html.twig' %}
 
-{% block title %}Nos Menus - Vite & Gourmand{% endblock %}
+{% block title %}Nos menus - Vite & Gourmand{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Nos Menus</h1>
-
-<!-- Filtres -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-6">
-                <label for="theme" class="form-label">Thème</label>
-                <select id="theme" name="theme" class="form-select">
-                    <option value="">-- Tous les thèmes --</option>
-                    <option value="NOEL" {% if theme_filter == 'NOEL' %}selected{% endif %}>Noël</option>
-                    <option value="PAQUES" {% if theme_filter == 'PAQUES' %}selected{% endif %}>Pâques</option>
-                    <option value="CLASSIQUE" {% if theme_filter == 'CLASSIQUE' %}selected{% endif %}>Classique</option>
-                    <option value="MARIAGE" {% if theme_filter == 'MARIAGE' %}selected{% endif %}>Mariage</option>
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label for="regime" class="form-label">Régime</label>
-                <select id="regime" name="regime" class="form-select">
-                    <option value="">-- Tous les régimes --</option>
-                    <option value="CLASSIQUE" {% if regime_filter == 'CLASSIQUE' %}selected{% endif %}>Classique</option>
-                    <option value="VEGETARIEN" {% if regime_filter == 'VEGETARIEN' %}selected{% endif %}>Végétarien</option>
-                    <option value="VEGAN" {% if regime_filter == 'VEGAN' %}selected{% endif %}>Vegan</option>
-                    <option value="SANS_GLUTEN" {% if regime_filter == 'SANS_GLUTEN' %}selected{% endif %}>Sans gluten</option>
-                </select>
-            </div>
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">Filtrer</button>
-                <a href="{{ path('app_menu_list') }}" class="btn btn-secondary">Réinitialiser</a>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Liste des menus -->
 <div class="row">
-    {% if menus is empty %}
-        <div class="col-12">
-            <p class="alert alert-info">Aucun menu ne correspond à vos critères.</p>
-        </div>
-    {% else %}
-        {% for menu in menus %}
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ menu.titre }}</h5>
-                        <p class="card-text">{{ menu.description|slice(0, 100) }}...</p>
-                        
-                        <div class="mb-2">
-                            <small class="text-muted">
-                                <strong>Thème :</strong> {{ menu.theme }}<br>
-                                <strong>Régime :</strong> {{ menu.regime }}<br>
-                                <strong>Min :</strong> {{ menu.nb_personnes_min }} personnes<br>
-                                <strong>Stock :</strong> {{ menu.stock }} disponibles
-                            </small>
+
+    {# ── COLONNE FILTRES ── #}
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">🔍 Filtrer les menus</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="{{ path('app_menu_list') }}" id="filterForm">
+
+                    <div class="mb-3">
+                        <label for="theme" class="form-label fw-bold">Thème</label>
+                        <select class="form-select" id="theme" name="theme">
+                            <option value="">Tous les thèmes</option>
+                            <option value="CLASSIQUE" {{ theme_filter == 'CLASSIQUE' ? 'selected' }}>Classique</option>
+                            <option value="NOEL"      {{ theme_filter == 'NOEL'      ? 'selected' }}>Noël</option>
+                            <option value="PAQUES"    {{ theme_filter == 'PAQUES'    ? 'selected' }}>Pâques</option>
+                            <option value="EVENEMENT" {{ theme_filter == 'EVENEMENT' ? 'selected' }}>Événement</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="regime" class="form-label fw-bold">Régime</label>
+                        <select class="form-select" id="regime" name="regime">
+                            <option value="">Tous les régimes</option>
+                            <option value="CLASSIQUE"  {{ regime_filter == 'CLASSIQUE'  ? 'selected' }}>Classique</option>
+                            <option value="VEGETARIEN" {{ regime_filter == 'VEGETARIEN' ? 'selected' }}>Végétarien</option>
+                            <option value="VEGAN"      {{ regime_filter == 'VEGAN'      ? 'selected' }}>Vegan</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="prixMax" class="form-label fw-bold">Prix maximum (€)</label>
+                        <input type="number" class="form-control" id="prixMax" name="prixMax"
+                               min="0" step="0.01" value="{{ prixMax_filter ?: '' }}"
+                               placeholder="Ex : 150">
+                    </div>
+
+                    <div class="mb-1">
+                        <label class="form-label fw-bold">Fourchette de prix (€)</label>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col">
+                            <input type="number" class="form-control" name="prixMin"
+                                   min="0" step="0.01" value="{{ prixMin_filter ?: '' }}"
+                                   placeholder="Min">
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" name="prixMaxRange"
+                                   min="0" step="0.01" value="{{ prixMaxRange_filter ?: '' }}"
+                                   placeholder="Max">
                         </div>
                     </div>
-                    <div class="card-footer bg-white">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong class="text-primary fs-5">{{ menu.prix }}€</strong>
-                            <a href="{{ path('app_menu_detail', {'id': menu.id_menu}) }}" class="btn btn-sm btn-primary">
-                                Voir plus
-                            </a>
+
+                    <div class="mb-4">
+                        <label for="nbPersonnes" class="form-label fw-bold">Nombre de personnes</label>
+                        <input type="number" class="form-control" id="nbPersonnes" name="nbPersonnes"
+                               min="1" value="{{ nbPersonnes_filter ?: '' }}"
+                               placeholder="Ex : 10">
+                        <div class="form-text">Affiche les menus acceptant ce nombre de personnes.</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">Appliquer</button>
+                        <a href="{{ path('app_menu_list') }}" class="btn btn-outline-secondary btn-sm">
+                            Réinitialiser
+                        </a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# ── COLONNE MENUS ── #}
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1>Nos menus</h1>
+            <span class="text-muted">{{ menus|length }} menu(s) trouvé(s)</span>
+        </div>
+
+        <div class="row" id="menuContainer">
+            {% for menu in menus %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="badge bg-secondary">{{ menu.theme|capitalize }}</span>
+                            <span class="badge bg-info text-dark">{{ menu.regime|capitalize }}</span>
                         </div>
+                        <h5 class="card-title">{{ menu.titre }}</h5>
+                        <p class="card-text text-muted small">
+                            {{ menu.description|default('')|slice(0, 100) }}{% if menu.description|default('')|length > 100 %}...{% endif %}
+                        </p>
+                        <p class="mb-1">
+                            <small class="text-muted">👥 {{ menu.nb_personnes_min }} personnes minimum</small>
+                        </p>
+                        <p class="mb-0">
+                            <small class="text-muted">📦 Stock : {{ menu.stock }}</small>
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                        <strong class="text-primary fs-5">{{ menu.prix }} €</strong>
+                        <a href="{{ path('app_menu_detail', {id: menu.id_menu}) }}"
+                           class="btn btn-sm btn-outline-primary">Voir le détail</a>
                     </div>
                 </div>
             </div>
-        {% endfor %}
-    {% endif %}
+            {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    Aucun menu ne correspond à vos critères. 
+                    <a href="{{ path('app_menu_list') }}">Réinitialiser les filtres</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
 </div>
+{% endblock %}
+
+{% block javascripts %}
+{# Soumission automatique du formulaire au changement d'un filtre (sans rechargement intrusif) #}
+<script>
+    document.querySelectorAll('#filterForm select').forEach(function(select) {
+        select.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+    });
+</script>
 {% endblock %}

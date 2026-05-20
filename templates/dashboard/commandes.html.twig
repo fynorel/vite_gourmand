@@ -1,63 +1,152 @@
-{% extends "base.html.twig" %}
+{% extends 'base.html.twig' %}
 
-{% block title %}Mes Commandes - Vite & Gourmand{% endblock %}
+{% block title %}Gestion des commandes{% endblock %}
 
 {% block content %}
-<div class="row mb-5">
-    <div class="col-md-12">
-        <h2>📦 Mes Commandes</h2>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Gestion des commandes</h1>
+    <a href="{{ path('app_dashboard_index') }}" class="btn btn-outline-secondary btn-sm">← Dashboard</a>
 </div>
 
-{% if commandes|length == 0 %}
-    <div class="alert alert-info">
-        Il n'y a pas encore de commandes.
-        
+{# ── FILTRES ── #}
+<form method="GET" class="row g-2 mb-4">
+    <div class="col-md-4">
+        <select class="form-select" name="statut" onchange="this.form.submit()">
+            <option value="">Tous les statuts</option>
+            {% for statut in statuts %}
+                <option value="{{ statut }}" {{ statut_filter == statut ? 'selected' }}>
+                    {{ statut|replace({'_': ' '}) }}
+                </option>
+            {% endfor %}
+        </select>
     </div>
-{% else %}
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>Menu</th>
-                    <th>Date</th>
-                    <th>Personnes</th>
-                    <th>Prix</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for commande in commandes %}
-                    <tr>
-                        <td>{{ commande.menu.titre }}</td>
-                        <td>{{ commande.datePrestation|date('d/m/Y') }}</td>
-                        <td>{{ commande.nbPersonnes }}</td>
-                        <td>{{ commande.prixTotal|number_format(2, ',', ' ') }} €</td>
-                        <td>
-                            {% if commande.statut == 'EN_ATTENTE' %}
-                                <span class="badge bg-warning">En attente</span>
-                            {% elseif commande.statut == 'ACCEPTE' %}
-                                <span class="badge bg-info">Acceptée</span>
-                            {% elseif commande.statut == 'EN_PREPARATION' %}
-                                <span class="badge bg-primary">En préparation</span>
-                            {% elseif commande.statut == 'EN_COURS_LIVRAISON' %}
-                                <span class="badge bg-secondary">En livraison</span>
-                            {% elseif commande.statut == 'EN_ATTENTE_RETOUR_MATERIEL' %}
-                                <span class="badge bg-warning">Retour matériel</span>
-                            {% elseif commande.statut == 'TERMINEE' %}
-                                <span class="badge bg-success">Terminée</span>
-                            {% elseif commande.statut == 'ANNULEE' %}
-                                <span class="badge bg-danger">Annulée</span>
+    <div class="col-md-4">
+        <div class="input-group">
+            <input type="text" class="form-control" name="search"
+                   value="{{ search_filter }}" placeholder="Nom ou email client...">
+            <button class="btn btn-outline-secondary" type="submit">🔍</button>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <a href="{{ path('app_dashboard_commandes') }}" class="btn btn-outline-secondary w-100">Réinitialiser</a>
+    </div>
+</form>
+
+{# ── LISTE DES COMMANDES ── #}
+<div class="table-responsive">
+<table class="table table-striped table-bordered align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Client</th>
+            <th>Menu</th>
+            <th>Date prestation</th>
+            <th>Personnes</th>
+            <th>Total</th>
+            <th>Statut</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for commande in commandes %}
+        <tr>
+            <td>{{ commande.id }}</td>
+            <td>
+                {{ commande.utilisateur.prenom }} {{ commande.utilisateur.nom }}<br>
+                <small class="text-muted">{{ commande.utilisateur.mail }}</small>
+            </td>
+            <td>{{ commande.menu.titre }}</td>
+            <td>{{ commande.datePrestation|date('d/m/Y à H:i') }}</td>
+            <td>{{ commande.nbPersonnes }}</td>
+            <td>{{ commande.prixTotal }} €</td>
+            <td>
+                {% set colors = {
+                    'EN_ATTENTE': 'warning',
+                    'ACCEPTE': 'info',
+                    'EN_PREPARATION': 'primary',
+                    'EN_COURS_LIVRAISON': 'primary',
+                    'LIVRE': 'success',
+                    'EN_ATTENTE_RETOUR_MATERIEL': 'danger',
+                    'TERMINEE': 'success',
+                    'ANNULEE': 'secondary'
+                } %}
+                <span class="badge bg-{{ colors[commande.statut] ?? 'secondary' }}">
+                    {{ commande.statut|replace({'_': ' '}) }}
+                </span>
+            </td>
+            <td>
+                {# Changer le statut #}
+                {% if commande.statut not in ['TERMINEE', 'ANNULEE'] %}
+                <form method="POST"
+                      action="{{ path('app_dashboard_commande_statut', {id: commande.id}) }}"
+                      class="d-flex gap-1 mb-1">
+                    <input type="hidden" name="_token" value="{{ csrf_token('statut_' ~ commande.id) }}">
+                    <select class="form-select form-select-sm" name="statut">
+                        {% for statut in statuts %}
+                            {% if statut not in ['ANNULEE'] %}
+                            <option value="{{ statut }}" {{ commande.statut == statut ? 'selected' }}>
+                                {{ statut|replace({'_': ' '}) }}
+                            </option>
                             {% endif %}
-                        </td>
-                        <td>
-                            <a href="{{ path('app_commande_detail', {id: commande.id}) }}" class="btn btn-sm btn-info">Détail</a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-{% endif %}
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-success">✓</button>
+                </form>
+
+                {# Annuler avec motif #}
+                <button class="btn btn-sm btn-danger w-100"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalAnnuler{{ commande.id }}">
+                    Annuler
+                </button>
+                {% endif %}
+            </td>
+        </tr>
+
+        {# Modal annulation #}
+        {% if commande.statut not in ['TERMINEE', 'ANNULEE'] %}
+        <div class="modal fade" id="modalAnnuler{{ commande.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="POST"
+                          action="{{ path('app_dashboard_commande_annuler', {id: commande.id}) }}">
+                        <input type="hidden" name="_token"
+                               value="{{ csrf_token('annuler_' ~ commande.id) }}">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Annuler la commande #{{ commande.id }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Mode de contact <span class="text-danger">*</span></label>
+                                <select class="form-select" name="mode_contact" required>
+                                    <option value="">-- Choisir --</option>
+                                    <option value="GSM">Appel GSM</option>
+                                    <option value="MAIL">Mail</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Motif d'annulation <span class="text-danger">*</span></label>
+                                <textarea class="form-control" name="motif" rows="3" required
+                                          placeholder="Expliquez le motif..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                            <button type="submit" class="btn btn-danger">Confirmer l'annulation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <tr>
+            <td colspan="8" class="text-center text-muted">Aucune commande trouvée.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
 {% endblock %}

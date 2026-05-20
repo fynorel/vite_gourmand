@@ -1,0 +1,200 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ menu.titre }} - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ path('app_menu_list') }}" class="btn btn-outline-secondary btn-sm">← Retour aux menus</a>
+</div>
+
+<div class="row">
+
+    {# ── COLONNE PRINCIPALE ── #}
+    <div class="col-md-8">
+
+        {# Titre + badges #}
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <h1 class="mb-0">{{ menu.titre }}</h1>
+        </div>
+        <div class="mb-3">
+            <span class="badge bg-secondary">{{ menu.theme|capitalize }}</span>
+            <span class="badge bg-info text-dark">{{ menu.regime|capitalize }}</span>
+            {% if menu.stock <= 3 and menu.stock > 0 %}
+                <span class="badge bg-warning text-dark">⚠️ Plus que {{ menu.stock }} disponible(s)</span>
+            {% elseif menu.stock == 0 %}
+                <span class="badge bg-danger">Indisponible</span>
+            {% endif %}
+        </div>
+
+        {# Description #}
+        {% if menu.description %}
+        <p class="lead mb-4">{{ menu.description }}</p>
+        {% endif %}
+
+        {# !! CONDITIONS EN ÉVIDENCE (CDC) !! #}
+        {% if menu.conditions %}
+        <div class="alert alert-warning d-flex gap-2 mb-4" role="alert">
+            <span class="fs-4">⚠️</span>
+            <div>
+                <strong>Conditions importantes à lire avant de commander</strong>
+                <p class="mb-0 mt-1">{{ menu.conditions }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {# Galerie d'images #}
+        {% if menu.images is not empty %}
+        <h4 class="mb-3">Galerie</h4>
+        <div class="row g-2 mb-4">
+            {% for image in menu.images|sort((a, b) => a.ordre <=> b.ordre) %}
+            <div class="col-4">
+                <img src="{{ image.url }}"
+                     alt="{{ image.alt }}"
+                     class="img-fluid rounded shadow-sm"
+                     style="height: 150px; object-fit: cover; width: 100%;">
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {# Liste des plats groupés par type #}
+        <h4 class="mb-3">Composition du menu</h4>
+
+        {% set entrees = [] %}
+        {% set plats_principaux = [] %}
+        {% set desserts = [] %}
+        {% for plat in menu.plats %}
+            {% if plat.type == 'entree' %}
+                {% set entrees = entrees|merge([plat]) %}
+            {% elseif plat.type == 'plat' %}
+                {% set plats_principaux = plats_principaux|merge([plat]) %}
+            {% elseif plat.type == 'dessert' %}
+                {% set desserts = desserts|merge([plat]) %}
+            {% endif %}
+        {% endfor %}
+
+        {% if entrees is not empty %}
+        <div class="mb-3">
+            <h6 class="text-muted text-uppercase">🥗 Entrées</h6>
+            <ul class="list-group list-group-flush mb-2">
+                {% for plat in entrees %}
+                <li class="list-group-item">
+                    <strong>{{ plat.nom }}</strong>
+                    {% if plat.description %}<br><small class="text-muted">{{ plat.description }}</small>{% endif %}
+                    {% if plat.allergenes is not empty %}
+                        <br>
+                        <small>
+                            🚨 Allergènes :
+                            {% for allergene in plat.allergenes %}
+                                <span class="badge bg-warning text-dark">{{ allergene.nom }}</span>
+                            {% endfor %}
+                        </small>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if plats_principaux is not empty %}
+        <div class="mb-3">
+            <h6 class="text-muted text-uppercase">🍽️ Plats</h6>
+            <ul class="list-group list-group-flush mb-2">
+                {% for plat in plats_principaux %}
+                <li class="list-group-item">
+                    <strong>{{ plat.nom }}</strong>
+                    {% if plat.description %}<br><small class="text-muted">{{ plat.description }}</small>{% endif %}
+                    {% if plat.allergenes is not empty %}
+                        <br>
+                        <small>
+                            🚨 Allergènes :
+                            {% for allergene in plat.allergenes %}
+                                <span class="badge bg-warning text-dark">{{ allergene.nom }}</span>
+                            {% endfor %}
+                        </small>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if desserts is not empty %}
+        <div class="mb-3">
+            <h6 class="text-muted text-uppercase">🍰 Desserts</h6>
+            <ul class="list-group list-group-flush mb-2">
+                {% for plat in desserts %}
+                <li class="list-group-item">
+                    <strong>{{ plat.nom }}</strong>
+                    {% if plat.description %}<br><small class="text-muted">{{ plat.description }}</small>{% endif %}
+                    {% if plat.allergenes is not empty %}
+                        <br>
+                        <small>
+                            🚨 Allergènes :
+                            {% for allergene in plat.allergenes %}
+                                <span class="badge bg-warning text-dark">{{ allergene.nom }}</span>
+                            {% endfor %}
+                        </small>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if menu.plats is empty %}
+            <p class="text-muted">Aucun plat renseigné pour ce menu.</p>
+        {% endif %}
+
+    </div>
+
+    {# ── COLONNE LATÉRALE : INFOS + COMMANDE ── #}
+    <div class="col-md-4">
+        <div class="card shadow-sm sticky-top" style="top: 80px;">
+            <div class="card-body">
+
+                <h5 class="card-title mb-3">Informations</h5>
+
+                <ul class="list-unstyled mb-4">
+                    <li class="mb-2">💶 <strong>Prix :</strong> {{ menu.prix }} €</li>
+                    <li class="mb-2">👥 <strong>Personnes minimum :</strong> {{ menu.nbPersonnesMin }}</li>
+                    <li class="mb-2">📦 <strong>Stock disponible :</strong> {{ menu.stock }}</li>
+                    {% if rating %}
+                    <li class="mb-2">
+                        ⭐ <strong>Note moyenne :</strong>
+                        {{ rating.note_moyenne }}/5
+                        <small class="text-muted">({{ rating.nb_avis }} avis)</small>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                {# Bouton commander selon statut authentification #}
+                {% if menu.stock > 0 %}
+                    {% if app.user %}
+                        <a href="{{ path('app_commande_new', {menuId: menu.id}) }}"
+                           class="btn btn-primary w-100 btn-lg">
+                            🛒 Commander ce menu
+                        </a>
+                    {% else %}
+                        <div class="alert alert-info text-center py-2 mb-2">
+                            Connectez-vous pour commander
+                        </div>
+                        <a href="{{ path('app_login') }}" class="btn btn-primary w-100 mb-2">
+                            Se connecter
+                        </a>
+                        <a href="{{ path('app_register') }}" class="btn btn-outline-primary w-100">
+                            Créer un compte
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <button class="btn btn-secondary w-100 btn-lg" disabled>
+                        Indisponible
+                    </button>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

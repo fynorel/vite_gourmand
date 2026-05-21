@@ -62,7 +62,7 @@ RUN rm -rf \
     compose.override.yaml
 
 # ── Dépendances PHP (production uniquement) ───────────────────────────────
-RUN composer install \
+RUN composer install --verbose \
     --no-dev \
     --optimize-autoloader \
     --no-interaction \

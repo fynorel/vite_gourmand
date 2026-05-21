@@ -41,7 +41,7 @@ RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
     --optimize-autoloader \
     --no-interaction \
     --prefer-dist \
-    --ignore-platform-req=ext-mongodb
+    --ignore-platform-reqs
 
 RUN mkdir -p var/cache var/log \
     && chown -R www-data:www-data /var/www/html \

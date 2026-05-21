@@ -39,7 +39,8 @@ RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
     --optimize-autoloader \
     --no-interaction \
     --prefer-dist \
-    --no-scripts
+    --no-scripts \
+    --ignore-platform-req=ext-mongodb
 
 COPY . .
 

@@ -1,29 +1,24 @@
 FROM php:8.4-fpm-bookworm
 
-RUN apt-get update -y \
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/install-php-extensions \
+    && apt-get update -y \
     && apt-get install -y --no-install-recommends \
         nginx \
         supervisor \
         git \
         curl \
         unzip \
-        libzip-dev \
-        libicu-dev \
-        libonig-dev \
-        libxml2-dev \
-        pkg-config \
-        libssl-dev \
-        libzstd-dev \
-        cmake \
-        autoconf \
-        g++ \
-        make \
+    && install-php-extensions \
+        pdo_mysql \
+        zip \
+        intl \
+        mbstring \
+        xml \
+        opcache \
+        mongodb \
     && rm -rf /var/lib/apt/lists/*
-
-RUN docker-php-ext-install pdo pdo_mysql zip intl mbstring xml opcache
-
-RUN pecl install mongodb \
-    && docker-php-ext-enable mongodb
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

@@ -1,0 +1,15 @@
+.git
+.gitignore
+vendor/
+node_modules/
+var/cache/
+var/log/
+var/sessions/
+.env.local
+.env.dev
+tests/
+*.pdf
+*.md
+docker/
+compose.yaml
+compose.override.yaml

@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ plat.nom }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 600px;">
+    <h1>Modifier : {{ plat.nom }}</h1>
+
+    <form method="POST" action="{{ path('app_plat_management_edit', {id: plat.id}) }}">
+
+        <div class="mb-3">
+            <label for="nom" class="form-label">Nom du plat <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="nom" name="nom"
+                   value="{{ plat.nom }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
+            <select class="form-select" id="type" name="type" required>
+                <option value="entree"  {{ plat.type == 'entree'  ? 'selected' }}>Entrée</option>
+                <option value="plat"    {{ plat.type == 'plat'    ? 'selected' }}>Plat</option>
+                <option value="dessert" {{ plat.type == 'dessert' ? 'selected' }}>Dessert</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description"
+                      rows="4">{{ plat.description }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Allergènes</label>
+            <div class="d-flex flex-wrap gap-2">
+                {% for allergene in allergenes %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox"
+                           name="allergenes[]" value="{{ allergene.id }}"
+                           id="allergene_{{ allergene.id }}"
+                           {{ plat.allergenes.contains(allergene) ? 'checked' }}>
+                    <label class="form-check-label" for="allergene_{{ allergene.id }}">
+                        {{ allergene.nom }}
+                    </label>
+                </div>
+                {% else %}
+                    <p class="text-muted">Aucun allergène disponible.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="actif" name="actif"
+                   {{ plat.actif ? 'checked' }}>
+            <label class="form-check-label" for="actif">Plat actif</label>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-warning">Enregistrer</button>
+            <a href="{{ path('app_plat_management_list') }}" class="btn btn-secondary">Annuler</a>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

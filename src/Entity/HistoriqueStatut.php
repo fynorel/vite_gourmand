@@ -18,7 +18,7 @@ class HistoriqueStatut
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Commande::class, inversedBy: 'historiques')]
-    #[ORM\JoinColumn(name: 'id_commande', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_commande', referencedColumnName: 'id_commande', nullable: false, onDelete: 'CASCADE')]
     private ?Commande $commande = null;
 
     #[ORM\Column(type: 'string', length: 30)]

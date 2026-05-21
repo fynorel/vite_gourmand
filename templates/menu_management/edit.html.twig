@@ -1,0 +1,130 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ menu.titre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 700px;">
+    <h1>Modifier : {{ menu.titre }}</h1>
+
+    <form method="POST" action="{{ path('app_menu_management_edit', {id: menu.id}) }}">
+
+        <div class="mb-3">
+            <label for="titre" class="form-label">Titre <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="titre" name="titre"
+                   value="{{ menu.titre }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="3">{{ menu.description }}</textarea>
+        </div>
+
+        <div class="row">
+            <div class="col mb-3">
+                <label for="theme" class="form-label">Thème <span class="text-danger">*</span></label>
+                <select class="form-select" id="theme" name="theme" required>
+                    <option value="CLASSIQUE" {{ menu.theme == 'CLASSIQUE' ? 'selected' }}>Classique</option>
+                    <option value="NOEL"      {{ menu.theme == 'NOEL'      ? 'selected' }}>Noël</option>
+                    <option value="PAQUES"    {{ menu.theme == 'PAQUES'    ? 'selected' }}>Pâques</option>
+                    <option value="EVENEMENT" {{ menu.theme == 'EVENEMENT' ? 'selected' }}>Événement</option>
+                </select>
+            </div>
+            <div class="col mb-3">
+                <label for="regime" class="form-label">Régime <span class="text-danger">*</span></label>
+                <select class="form-select" id="regime" name="regime" required>
+                    <option value="CLASSIQUE"  {{ menu.regime == 'CLASSIQUE'  ? 'selected' }}>Classique</option>
+                    <option value="VEGETARIEN" {{ menu.regime == 'VEGETARIEN' ? 'selected' }}>Végétarien</option>
+                    <option value="VEGAN"      {{ menu.regime == 'VEGAN'      ? 'selected' }}>Vegan</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col mb-3">
+                <label for="nbPersonnesMin" class="form-label">Personnes minimum <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="nbPersonnesMin" name="nbPersonnesMin"
+                       min="1" value="{{ menu.nbPersonnesMin }}" required>
+            </div>
+            <div class="col mb-3">
+                <label for="prix" class="form-label">Prix (€) <span class="text-danger">*</span></label>
+                <input type="number" step="0.01" class="form-control" id="prix" name="prix"
+                       min="0" value="{{ menu.prix }}" required>
+            </div>
+            <div class="col mb-3">
+                <label for="stock" class="form-label">Stock <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="stock" name="stock"
+                       min="0" value="{{ menu.stock }}" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="conditions" class="form-label">Conditions</label>
+            <textarea class="form-control" id="conditions" name="conditions" rows="2">{{ menu.conditions }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Plats du menu</label>
+
+            <div class="mb-2">
+                <p class="mb-1 text-muted">Entrées</p>
+                <div class="d-flex flex-wrap gap-2 ps-2">
+                    {% for plat in platsByType.entree %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="plats[]" value="{{ plat.id }}" id="plat_{{ plat.id }}"
+                                   {{ menu.plats.contains(plat) ? 'checked' }}>
+                            <label class="form-check-label" for="plat_{{ plat.id }}">{{ plat.nom }}</label>
+                        </div>
+                    {% else %}
+                        <span class="text-muted fst-italic">Aucune entrée disponible</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <p class="mb-1 text-muted">Plats</p>
+                <div class="d-flex flex-wrap gap-2 ps-2">
+                    {% for plat in platsByType.plat %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="plats[]" value="{{ plat.id }}" id="plat_{{ plat.id }}"
+                                   {{ menu.plats.contains(plat) ? 'checked' }}>
+                            <label class="form-check-label" for="plat_{{ plat.id }}">{{ plat.nom }}</label>
+                        </div>
+                    {% else %}
+                        <span class="text-muted fst-italic">Aucun plat disponible</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <p class="mb-1 text-muted">Desserts</p>
+                <div class="d-flex flex-wrap gap-2 ps-2">
+                    {% for plat in platsByType.dessert %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="plats[]" value="{{ plat.id }}" id="plat_{{ plat.id }}"
+                                   {{ menu.plats.contains(plat) ? 'checked' }}>
+                            <label class="form-check-label" for="plat_{{ plat.id }}">{{ plat.nom }}</label>
+                        </div>
+                    {% else %}
+                        <span class="text-muted fst-italic">Aucun dessert disponible</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="actif" name="actif"
+                   {{ menu.actif ? 'checked' }}>
+            <label class="form-check-label" for="actif">Menu actif</label>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-warning">Enregistrer</button>
+            <a href="{{ path('app_menu_management_list') }}" class="btn btn-secondary">Annuler</a>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

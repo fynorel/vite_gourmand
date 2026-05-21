@@ -1,5 +1,4 @@
 {% extends "base.html.twig" %}
-
 {% block title %}Mon Profil - Vite & Gourmand{% endblock %}
 
 {% block content %}
@@ -7,49 +6,87 @@
     <div class="col-md-6">
         <h2 class="mb-4">Mon Profil</h2>
 
-        <form method="post">
+        <form method="post" id="profilForm" novalidate>
+
             <div class="mb-3">
-                <label for="prenom" class="form-label">Prénom</label>
-                <input type="text" id="prenom" name="prenom" class="form-control" 
-                       value="{{ user.prenom }}" required>
+                <label for="prenom" class="form-label">Prénom <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="text" id="prenom" name="prenom" class="form-control"
+                       value="{{ user.prenom }}"
+                       maxlength="80"
+                       aria-required="true"
+                       aria-describedby="prenom-error">
+                <div class="invalid-feedback" id="prenom-error" role="alert"></div>
             </div>
 
             <div class="mb-3">
-                <label for="nom" class="form-label">Nom</label>
-                <input type="text" id="nom" name="nom" class="form-control" 
-                       value="{{ user.nom }}" required>
+                <label for="nom" class="form-label">Nom <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="text" id="nom" name="nom" class="form-control"
+                       value="{{ user.nom }}"
+                       maxlength="80"
+                       aria-required="true"
+                       aria-describedby="nom-error">
+                <div class="invalid-feedback" id="nom-error" role="alert"></div>
             </div>
 
             <div class="mb-3">
                 <label for="mail" class="form-label">Email</label>
-                <input type="email" id="mail" name="mail" class="form-control" 
-                       value="{{ user.mail }}" disabled>
+                <input type="email" id="mail" name="mail" class="form-control"
+                       value="{{ user.mail }}" disabled aria-disabled="true">
+                <div class="form-text">L'adresse email ne peut pas être modifiée.</div>
             </div>
 
             <div class="mb-3">
                 <label for="gsm" class="form-label">Téléphone</label>
-                <input type="tel" id="gsm" name="gsm" class="form-control" 
-                       value="{{ user.gsm ?? '' }}">
+                <input type="tel" id="gsm" name="gsm" class="form-control"
+                       value="{{ user.gsm ?? '' }}"
+                       maxlength="20"
+                       aria-describedby="gsm-error">
+                <div class="invalid-feedback" id="gsm-error" role="alert"></div>
             </div>
 
             <div class="mb-3">
                 <label for="adresse" class="form-label">Adresse</label>
-                <textarea id="adresse" name="adresse" class="form-control" rows="3">{{ user.adresse ?? '' }}</textarea>
+                <textarea id="adresse" name="adresse" class="form-control"
+                          rows="3"
+                          maxlength="500"
+                          aria-describedby="adresse-error">{{ user.adresse ?? '' }}</textarea>
+                <div class="invalid-feedback" id="adresse-error" role="alert"></div>
             </div>
 
             <hr>
-
             <h5>Changer votre mot de passe</h5>
 
             <div class="mb-3">
-                <label for="password" class="form-label">Nouveau mot de passe</label>
-                <input type="password" id="password" name="password" class="form-control">
-                <small class="form-text text-muted d-block mt-1">
-                    Laissez vide pour ne pas changer
+                <label for="mdp" class="form-label">Nouveau mot de passe</label>
+                <div class="input-group">
+                    <input type="password" id="mdp" name="mdp" class="form-control"
+                           autocomplete="new-password"
+                           aria-describedby="mdp-hint mdp-error">
+                    <button type="button" class="btn btn-outline-secondary"
+                            id="toggleMdp" aria-label="Afficher ou masquer le mot de passe">👁️</button>
+                </div>
+                <small class="form-text text-muted d-block mt-1" id="mdp-hint">
+                    Laissez vide pour ne pas changer. Min 10 caractères : 1 majuscule, 1 minuscule, 1 chiffre, 1 spécial.
                 </small>
+                <div class="mt-2" id="password-strength" style="display:none;">
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" id="strength-bar" role="progressbar" style="width:0%"></div>
+                    </div>
+                    <small id="strength-label" class="text-muted"></small>
+                </div>
+                <div class="invalid-feedback" id="mdp-error" role="alert"></div>
+            </div>
+
+            <div class="mb-3" id="mdp-confirm-group" style="display:none;">
+                <label for="mdp_confirm" class="form-label">Confirmer le nouveau mot de passe</label>
+                <input type="password" id="mdp_confirm" name="mdp_confirm" class="form-control"
+                       autocomplete="new-password"
+                       aria-describedby="mdp-confirm-error">
+                <div class="invalid-feedback" id="mdp-confirm-error" role="alert"></div>
             </div>
 
             <button type="submit" class="btn btn-primary w-100">Mettre à jour</button>
+
         </form>
 
         <div class="mt-3">
@@ -57,4 +94,142 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// ── Utilitaires ──────────────────────────────────────────────────────────────
+function showError(fieldId, errorId, message) {
+    const field = document.getElementById(fieldId);
+    const error = document.getElementById(errorId);
+    if (field) { field.classList.add('is-invalid'); field.classList.remove('is-valid'); }
+    if (error) error.textContent = message;
+}
+
+function showSuccess(fieldId) {
+    const field = document.getElementById(fieldId);
+    if (field) { field.classList.remove('is-invalid'); field.classList.add('is-valid'); }
+}
+
+function containsMalicious(value) {
+    return /<|>|script|javascript:|on\w+=/i.test(value);
+}
+
+// ── Validations ──────────────────────────────────────────────────────────────
+function validatePrenom() {
+    const val = document.getElementById('prenom').value.trim();
+    if (!val) { showError('prenom', 'prenom-error', 'Le prénom est obligatoire.'); return false; }
+    if (val.length < 2) { showError('prenom', 'prenom-error', 'Le prénom doit contenir au moins 2 caractères.'); return false; }
+    if (containsMalicious(val)) { showError('prenom', 'prenom-error', 'Le prénom contient des caractères non autorisés.'); return false; }
+    showSuccess('prenom'); return true;
+}
+
+function validateNom() {
+    const val = document.getElementById('nom').value.trim();
+    if (!val) { showError('nom', 'nom-error', 'Le nom est obligatoire.'); return false; }
+    if (val.length < 2) { showError('nom', 'nom-error', 'Le nom doit contenir au moins 2 caractères.'); return false; }
+    if (containsMalicious(val)) { showError('nom', 'nom-error', 'Le nom contient des caractères non autorisés.'); return false; }
+    showSuccess('nom'); return true;
+}
+
+function validateGsm() {
+    const val = document.getElementById('gsm').value.trim();
+    const gsmRegex = /^[\d\s\+\-\.]{7,20}$/;
+    if (val && !gsmRegex.test(val)) { showError('gsm', 'gsm-error', 'Le numéro de téléphone n\'est pas valide.'); return false; }
+    if (val) showSuccess('gsm');
+    return true;
+}
+
+function validateAdresse() {
+    const val = document.getElementById('adresse').value.trim();
+    if (containsMalicious(val)) { showError('adresse', 'adresse-error', 'L\'adresse contient des caractères non autorisés.'); return false; }
+    if (val) showSuccess('adresse');
+    return true;
+}
+
+function validateMdp() {
+    const val = document.getElementById('mdp').value;
+    const strengthDiv   = document.getElementById('password-strength');
+    const confirmGroup  = document.getElementById('mdp-confirm-group');
+
+    if (!val) {
+        strengthDiv.style.display  = 'none';
+        confirmGroup.style.display = 'none';
+        document.getElementById('mdp').classList.remove('is-invalid', 'is-valid');
+        return true; // optionnel
+    }
+
+    // Afficher la confirmation
+    confirmGroup.style.display = 'block';
+
+    // Calcul force
+    strengthDiv.style.display = 'block';
+    let score = 0;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[a-z]/.test(val)) score++;
+    if (/\d/.test(val)) score++;
+    if (/[\W_]/.test(val)) score++;
+
+    const colors = ['', 'bg-danger', 'bg-warning', 'bg-info', 'bg-primary', 'bg-success'];
+    const labels = ['', 'Très faible', 'Faible', 'Moyen', 'Fort', 'Très fort'];
+    const bar    = document.getElementById('strength-bar');
+    bar.className       = 'progress-bar ' + (colors[score] || '');
+    bar.style.width     = (score * 20) + '%';
+    document.getElementById('strength-label').textContent = labels[score] || '';
+
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{10,}$/;
+    if (!regex.test(val)) {
+        showError('mdp', 'mdp-error', 'Min. 10 caractères : 1 majuscule, 1 minuscule, 1 chiffre, 1 spécial.');
+        return false;
+    }
+    showSuccess('mdp');
+    return true;
+}
+
+function validateMdpConfirm() {
+    const val1 = document.getElementById('mdp').value;
+    const val2 = document.getElementById('mdp_confirm').value;
+    if (!val1) return true;
+    if (!val2) { showError('mdp_confirm', 'mdp-confirm-error', 'La confirmation est obligatoire.'); return false; }
+    if (val1 !== val2) { showError('mdp_confirm', 'mdp-confirm-error', 'Les mots de passe ne correspondent pas.'); return false; }
+    showSuccess('mdp_confirm');
+    return true;
+}
+
+// ── Afficher/masquer mot de passe ────────────────────────────────────────────
+document.getElementById('toggleMdp').addEventListener('click', function() {
+    const input = document.getElementById('mdp');
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    this.textContent = isPassword ? '🙈' : '👁️';
+    this.setAttribute('aria-label', isPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+});
+
+// ── Événements temps réel ────────────────────────────────────────────────────
+document.getElementById('prenom').addEventListener('blur', validatePrenom);
+document.getElementById('nom').addEventListener('blur', validateNom);
+document.getElementById('gsm').addEventListener('blur', validateGsm);
+document.getElementById('adresse').addEventListener('blur', validateAdresse);
+document.getElementById('mdp').addEventListener('input', validateMdp);
+document.getElementById('mdp_confirm').addEventListener('input', validateMdpConfirm);
+
+// ── Soumission ───────────────────────────────────────────────────────────────
+document.getElementById('profilForm').addEventListener('submit', function(e) {
+    const valid = [
+        validatePrenom(),
+        validateNom(),
+        validateGsm(),
+        validateAdresse(),
+        validateMdp(),
+        validateMdpConfirm()
+    ].every(Boolean);
+
+    if (!valid) {
+        e.preventDefault();
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+</script>
 {% endblock %}

@@ -1,5 +1,4 @@
 {% extends "base.html.twig" %}
-
 {% block title %}Connexion - Vite & Gourmand{% endblock %}
 
 {% block content %}
@@ -8,22 +7,41 @@
         <h2 class="mb-4">Connexion</h2>
 
         {% if error %}
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ error.messageKey|trans(error.messageData, 'security') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" aria-live="polite">
+            {{ error.messageKey|trans(error.messageData, 'security') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+        </div>
         {% endif %}
 
-        <form method="post" action="{{ path('app_login') }}">
+        <form method="post" action="{{ path('app_login') }}" id="loginForm" novalidate>
+
             <div class="mb-3">
-                <label for="username" class="form-label">Email</label>
-                <input type="email" id="username" name="_username" class="form-control" 
-                       value="{{ last_username }}" required autofocus>
+                <label for="username" class="form-label">Email <span class="text-danger" aria-hidden="true">*</span></label>
+                <input type="email" id="username" name="_username"
+                       class="form-control"
+                       value="{{ last_username }}"
+                       autocomplete="email"
+                       aria-required="true"
+                       aria-describedby="username-error"
+                       autofocus>
+                <div class="invalid-feedback" id="username-error" role="alert"></div>
             </div>
 
             <div class="mb-3">
-                <label for="password" class="form-label">Mot de passe</label>
-                <input type="password" id="password" name="_password" class="form-control" required>
+                <label for="password" class="form-label">Mot de passe <span class="text-danger" aria-hidden="true">*</span></label>
+                <div class="input-group">
+                    <input type="password" id="password" name="_password"
+                           class="form-control"
+                           autocomplete="current-password"
+                           aria-required="true"
+                           aria-describedby="password-error">
+                    <button type="button" class="btn btn-outline-secondary"
+                            id="togglePassword"
+                            aria-label="Afficher ou masquer le mot de passe">
+                        👁️
+                    </button>
+                </div>
+                <div class="invalid-feedback" id="password-error" role="alert"></div>
             </div>
 
             <div class="mb-3 form-check">
@@ -33,7 +51,7 @@
 
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-            <button type="submit" class="btn btn-primary w-100">Se connecter</button>
+            <button type="submit" class="btn btn-primary w-100" id="submitBtn">Se connecter</button>
         </form>
 
         <div class="mt-3 text-center">
@@ -42,4 +60,80 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// ── Utilitaires ──────────────────────────────────────────────────────────────
+function showError(fieldId, errorId, message) {
+    const field = document.getElementById(fieldId);
+    const error = document.getElementById(errorId);
+    field.classList.add('is-invalid');
+    field.classList.remove('is-valid');
+    if (error) error.textContent = message;
+}
+
+function showSuccess(fieldId) {
+    const field = document.getElementById(fieldId);
+    field.classList.remove('is-invalid');
+    field.classList.add('is-valid');
+}
+
+// ── Validations ──────────────────────────────────────────────────────────────
+function validateEmail() {
+    const val = document.getElementById('username').value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!val) {
+        showError('username', 'username-error', 'L\'adresse email est obligatoire.');
+        return false;
+    }
+    if (!emailRegex.test(val)) {
+        showError('username', 'username-error', 'L\'adresse email n\'est pas valide.');
+        return false;
+    }
+    if (/<|>|script/i.test(val)) {
+        showError('username', 'username-error', 'L\'adresse email contient des caractères non autorisés.');
+        return false;
+    }
+    showSuccess('username');
+    return true;
+}
+
+function validatePassword() {
+    const val = document.getElementById('password').value;
+    if (!val) {
+        showError('password', 'password-error', 'Le mot de passe est obligatoire.');
+        return false;
+    }
+    if (val.length < 10) {
+        showError('password', 'password-error', 'Le mot de passe doit contenir au moins 10 caractères.');
+        return false;
+    }
+    showSuccess('password');
+    return true;
+}
+
+// ── Afficher/masquer le mot de passe ─────────────────────────────────────────
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const input = document.getElementById('password');
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    this.textContent = isPassword ? '🙈' : '👁️';
+    this.setAttribute('aria-label', isPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+});
+
+// ── Événements temps réel ────────────────────────────────────────────────────
+document.getElementById('username').addEventListener('blur', validateEmail);
+document.getElementById('password').addEventListener('blur', validatePassword);
+
+// ── Soumission ───────────────────────────────────────────────────────────────
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const valid = [validateEmail(), validatePassword()].every(Boolean);
+    if (!valid) {
+        e.preventDefault();
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+</script>
 {% endblock %}

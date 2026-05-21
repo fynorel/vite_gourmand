@@ -1,0 +1,231 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des commandes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Gestion des commandes</h1>
+    <a href="{{ path('app_dashboard_index') }}" class="btn btn-outline-secondary btn-sm">← Dashboard</a>
+</div>
+
+{# ── FILTRES ── #}
+<form method="GET" class="row g-2 mb-4">
+    <div class="col-md-4">
+        <select class="form-select" name="statut" onchange="this.form.submit()">
+            <option value="">Tous les statuts</option>
+            {% for statut in statuts %}
+                <option value="{{ statut }}" {{ statut_filter == statut ? 'selected' }}>
+                    {{ statut|replace({'_': ' '}) }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-4">
+        <div class="input-group">
+            <input type="text" class="form-control" name="search"
+                   value="{{ search_filter }}" placeholder="Nom ou email client...">
+            <button class="btn btn-outline-secondary" type="submit">🔍</button>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <a href="{{ path('app_dashboard_commandes') }}" class="btn btn-outline-secondary w-100">Réinitialiser</a>
+    </div>
+</form>
+
+{# ── LISTE DES COMMANDES ── #}
+<div class="table-responsive">
+<table class="table table-striped table-bordered align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>#</th>
+            <th>Client</th>
+            <th>Menu</th>
+            <th>Date prestation</th>
+            <th>Personnes</th>
+            <th>Total</th>
+            <th>Statut</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for commande in commandes %}
+        <tr>
+            <td>{{ commande.id }}</td>
+            <td>
+                {{ commande.utilisateur.prenom }} {{ commande.utilisateur.nom }}<br>
+                <small class="text-muted">{{ commande.utilisateur.mail }}</small>
+            </td>
+            <td>{{ commande.menu.titre }}</td>
+            <td>{{ commande.datePrestation|date('d/m/Y à H:i') }}</td>
+            <td>{{ commande.nbPersonnes }}</td>
+            <td>{{ commande.prixTotal }} €</td>
+            <td>
+                {% set colors = {
+                    'EN_ATTENTE': 'warning',
+                    'ACCEPTE': 'info',
+                    'EN_PREPARATION': 'primary',
+                    'EN_COURS_LIVRAISON': 'primary',
+                    'LIVRE': 'success',
+                    'EN_ATTENTE_RETOUR_MATERIEL': 'danger',
+                    'TERMINEE': 'success',
+                    'ANNULEE': 'secondary'
+                } %}
+                <span class="badge bg-{{ colors[commande.statut] ?? 'secondary' }}">
+                    {{ commande.statut|replace({'_': ' '}) }}
+                </span>
+            </td>
+            <td>
+                {# Bouton historique (toujours visible) #}
+                <button class="btn btn-sm btn-outline-info w-100 mb-1"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalHistorique{{ commande.id }}"
+                        aria-label="Voir l'historique de la commande #{{ commande.id }}">
+                    📋 Historique
+                </button>
+
+                {# Changer le statut #}
+                {% if commande.statut not in ['TERMINEE', 'ANNULEE'] %}
+                <form method="POST"
+                      action="{{ path('app_dashboard_commande_statut', {id: commande.id}) }}"
+                      class="d-flex gap-1 mb-1">
+                    <input type="hidden" name="_token" value="{{ csrf_token('statut_' ~ commande.id) }}">
+                    <select class="form-select form-select-sm" name="statut">
+                        {% for statut in statuts %}
+                            {% if statut not in ['ANNULEE'] %}
+                            <option value="{{ statut }}" {{ commande.statut == statut ? 'selected' }}>
+                                {{ statut|replace({'_': ' '}) }}
+                            </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-success">✓</button>
+                </form>
+
+                {# Annuler avec motif #}
+                <button class="btn btn-sm btn-danger w-100"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalAnnuler{{ commande.id }}">
+                    Annuler
+                </button>
+                {% endif %}
+            </td>
+        </tr>
+
+        {# ── Modal historique ── #}
+        <div class="modal fade" id="modalHistorique{{ commande.id }}" tabindex="-1"
+             aria-labelledby="modalHistoriqueLabel{{ commande.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalHistoriqueLabel{{ commande.id }}">
+                            📋 Historique — Commande #{{ commande.id }}
+                            ({{ commande.utilisateur.prenom }} {{ commande.utilisateur.nom }})
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 p-3 bg-light rounded">
+                            <strong>Menu :</strong> {{ commande.menu.titre }}<br>
+                            <strong>Date prestation :</strong> {{ commande.datePrestation|date('d/m/Y à H:i') }}<br>
+                            <strong>Total :</strong> {{ commande.prixTotal }} €
+                        </div>
+
+                        {% if commande.historiques is empty %}
+                            <div class="alert alert-info mb-0">
+                                Aucun historique disponible pour cette commande.
+                            </div>
+                        {% else %}
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Statut</th>
+                                        <th>Modifié par</th>
+                                        <th>Commentaire</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for historique in commande.historiques %}
+                                    <tr>
+                                        <td>
+                                            <small>{{ historique.changedAt|date('d/m/Y à H:i') }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ colors[historique.statut] ?? 'secondary' }}">
+                                                {{ historique.statut|replace({'_': ' '}) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small>
+                                                {{ historique.changedBy.prenom }}
+                                                {{ historique.changedBy.nom }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ historique.commentaire ?: '—' }}
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── Modal annulation ── #}
+        {% if commande.statut not in ['TERMINEE', 'ANNULEE'] %}
+        <div class="modal fade" id="modalAnnuler{{ commande.id }}" tabindex="-1"
+             aria-labelledby="modalAnnulerLabel{{ commande.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="POST"
+                          action="{{ path('app_dashboard_commande_annuler', {id: commande.id}) }}">
+                        <input type="hidden" name="_token"
+                               value="{{ csrf_token('annuler_' ~ commande.id) }}">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalAnnulerLabel{{ commande.id }}">
+                                Annuler la commande #{{ commande.id }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Mode de contact <span class="text-danger">*</span></label>
+                                <select class="form-select" name="mode_contact" required>
+                                    <option value="">-- Choisir --</option>
+                                    <option value="GSM">Appel GSM</option>
+                                    <option value="MAIL">Mail</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Motif d'annulation <span class="text-danger">*</span></label>
+                                <textarea class="form-control" name="motif" rows="3" required
+                                          placeholder="Expliquez le motif..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                            <button type="submit" class="btn btn-danger">Confirmer l'annulation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <tr>
+            <td colspan="8" class="text-center text-muted">Aucune commande trouvée.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endblock %}

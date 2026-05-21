@@ -1,0 +1,116 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Commande #{{ commande.id }} - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-md-8">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Commande #{{ commande.id }}</h1>
+        <a href="{{ path('app_commande_list') }}" class="btn btn-outline-secondary btn-sm">← Mes commandes</a>
+    </div>
+
+    {# Statut #}
+    {% set statutColors = {
+        'EN_ATTENTE':          'warning',
+        'ACCEPTE':             'info',
+        'EN_PREPARATION':      'primary',
+        'EN_COURS_LIVRAISON':  'primary',
+        'LIVRE':               'success',
+        'RETOUR_MATERIEL':     'danger',
+        'TERMINEE':            'success',
+        'ANNULEE':             'secondary'
+    } %}
+    <div class="alert alert-{{ statutColors[commande.statut] ?? 'secondary' }} mb-4">
+        <strong>Statut :</strong> {{ commande.statut|replace({'_': ' '}) }}
+    </div>
+
+    {# Infos commande #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header"><h5 class="mb-0">Détails de la commande</h5></div>
+        <div class="card-body">
+            <ul class="list-unstyled mb-0">
+                <li class="mb-2">🍽️ <strong>Menu :</strong> {{ commande.menu.titre }}</li>
+                <li class="mb-2">👥 <strong>Nombre de personnes :</strong> {{ commande.nbPersonnes }}</li>
+                <li class="mb-2">📍 <strong>Adresse :</strong> {{ commande.adresse }}</li>
+                <li class="mb-2">📅 <strong>Date de prestation :</strong> {{ commande.datePrestation|date('d/m/Y à H:i') }}</li>
+                <li class="mb-2">🗓️ <strong>Commande passée le :</strong> {{ commande.dateCreation|date('d/m/Y à H:i') }}</li>
+            </ul>
+        </div>
+    </div>
+
+    {# Prix #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header"><h5 class="mb-0">💶 Détail du prix</h5></div>
+        <div class="card-body">
+            <table class="table table-borderless mb-0">
+                <tr>
+                    <td>Prix du menu</td>
+                    <td class="text-end">{{ commande.prixMenu }} €</td>
+                </tr>
+                {% if commande.reduction > 0 %}
+                <tr class="text-success">
+                    <td>Réduction (10%)</td>
+                    <td class="text-end">- {{ commande.reduction }} €</td>
+                </tr>
+                {% endif %}
+                {% if commande.fraisLivraison > 0 %}
+                <tr>
+                    <td>Frais de livraison</td>
+                    <td class="text-end">+ {{ commande.fraisLivraison }} €</td>
+                </tr>
+                {% endif %}
+                <tr class="border-top fw-bold fs-5">
+                    <td>Total</td>
+                    <td class="text-end text-primary">{{ commande.prixTotal }} €</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    {# Suivi historique (si accepté) #}
+    {% if commande.statut != 'EN_ATTENTE' and commande.historiques is not empty %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header"><h5 class="mb-0">📦 Suivi de la commande</h5></div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for historique in commande.historiques %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>{{ historique.statut|replace({'_': ' '}) }}</span>
+                    <small class="text-muted">{{ historique.changedAt|date('d/m/Y à H:i') }}</small>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Avis (si terminée et pas encore donné) #}
+    {% if commande.statut == 'TERMINEE' and commande.avis is null %}
+    <div class="alert alert-info">
+        <strong>Votre prestation est terminée !</strong> Donnez votre avis sur ce menu.
+        <a href="{{ path('app_avis_new', {id: commande.id}) }}" class="btn btn-sm btn-primary ms-2">
+            ⭐ Laisser un avis
+        </a>
+    </div>
+    {% endif %}
+
+    {# Annulation (si EN_ATTENTE) #}
+    {% if commande.statut == 'EN_ATTENTE' %}
+    <div class="card border-danger mb-4">
+        <div class="card-body">
+            <h6 class="text-danger">Annuler la commande</h6>
+            <p class="text-muted small">L'annulation n'est possible que tant que la commande n'a pas été acceptée.</p>
+            <form method="POST" action="{{ path('app_commande_cancel', {id: commande.id}) }}"
+                  onsubmit="return confirm('Confirmer l\'annulation ?')">
+                <input type="hidden" name="_token" value="{{ csrf_token('cancel_' ~ commande.id) }}">
+                <button type="submit" class="btn btn-danger btn-sm">Annuler la commande</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+</div>
+{% endblock %}

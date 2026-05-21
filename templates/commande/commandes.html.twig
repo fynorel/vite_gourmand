@@ -1,0 +1,63 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Mes Commandes - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-12">
+        <h2>📦 Mes Commandes</h2>
+    </div>
+</div>
+
+{% if commandes|length == 0 %}
+    <div class="alert alert-info">
+        Il n'y a pas encore de commandes.
+        
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Menu</th>
+                    <th>Date</th>
+                    <th>Personnes</th>
+                    <th>Prix</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for commande in commandes %}
+                    <tr>
+                        <td>{{ commande.menu.titre }}</td>
+                        <td>{{ commande.datePrestation|date('d/m/Y') }}</td>
+                        <td>{{ commande.nbPersonnes }}</td>
+                        <td>{{ commande.prixTotal|number_format(2, ',', ' ') }} €</td>
+                        <td>
+                            {% if commande.statut == 'EN_ATTENTE' %}
+                                <span class="badge bg-warning">En attente</span>
+                            {% elseif commande.statut == 'ACCEPTE' %}
+                                <span class="badge bg-info">Acceptée</span>
+                            {% elseif commande.statut == 'EN_PREPARATION' %}
+                                <span class="badge bg-primary">En préparation</span>
+                            {% elseif commande.statut == 'EN_COURS_LIVRAISON' %}
+                                <span class="badge bg-secondary">En livraison</span>
+                            {% elseif commande.statut == 'EN_ATTENTE_RETOUR_MATERIEL' %}
+                                <span class="badge bg-warning">Retour matériel</span>
+                            {% elseif commande.statut == 'TERMINEE' %}
+                                <span class="badge bg-success">Terminée</span>
+                            {% elseif commande.statut == 'ANNULEE' %}
+                                <span class="badge bg-danger">Annulée</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ path('app_commande_detail', {id: commande.id}) }}" class="btn btn-sm btn-info">Détail</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}

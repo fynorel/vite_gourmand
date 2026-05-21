@@ -1,0 +1,141 @@
+{% extends 'base.html.twig' %}
+{% block title %}Laisser un avis{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-md-6">
+
+    <h1 class="mb-2">⭐ Laisser un avis</h1>
+    <p class="text-muted mb-4">Menu : <strong>{{ commande.menu.titre }}</strong></p>
+
+    <form method="POST" action="{{ path('app_avis_new', {id: commande.id}) }}"
+          id="avisForm" novalidate>
+
+        <div class="mb-4">
+            <fieldset>
+                <legend class="form-label fw-bold">
+                    Note <span class="text-danger" aria-hidden="true">*</span>
+                </legend>
+                <div class="d-flex gap-3" id="note-container" aria-describedby="note-error">
+                    {% for i in 1..5 %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio"
+                               name="note" value="{{ i }}" id="note_{{ i }}"
+                               aria-required="true">
+                        <label class="form-check-label fs-5" for="note_{{ i }}">
+                            {{ i }} ⭐
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="invalid-feedback d-block" id="note-error" role="alert"></div>
+            </fieldset>
+        </div>
+
+        <div class="mb-4">
+            <label for="commentaire" class="form-label fw-bold">
+                Commentaire <span class="text-danger" aria-hidden="true">*</span>
+            </label>
+            <textarea class="form-control" id="commentaire" name="commentaire"
+                      rows="5"
+                      placeholder="Partagez votre expérience..."
+                      maxlength="1000"
+                      aria-required="true"
+                      aria-describedby="commentaire-error commentaire-count"></textarea>
+            <div class="d-flex justify-content-between mt-1">
+                <div class="invalid-feedback d-block" id="commentaire-error" role="alert"></div>
+                <small class="text-muted" id="commentaire-count">0 / 1000</small>
+            </div>
+        </div>
+
+        <div class="alert alert-info" role="note">
+            ℹ️ Votre avis sera visible sur le site après validation par notre équipe.
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Soumettre mon avis</button>
+            <a href="{{ path('app_profile') }}" class="btn btn-secondary">Annuler</a>
+        </div>
+
+    </form>
+</div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// ── Utilitaires ──────────────────────────────────────────────────────────────
+function showFieldError(errorId, message) {
+    const error = document.getElementById(errorId);
+    if (error) { error.textContent = message; error.style.display = 'block'; }
+}
+
+function clearFieldError(errorId) {
+    const error = document.getElementById(errorId);
+    if (error) { error.textContent = ''; error.style.display = 'none'; }
+}
+
+function containsMalicious(value) {
+    return /<|>|script|javascript:|on\w+=/i.test(value);
+}
+
+// ── Validations ──────────────────────────────────────────────────────────────
+function validateNote() {
+    const checked = document.querySelector('input[name="note"]:checked');
+    if (!checked) {
+        showFieldError('note-error', 'Veuillez sélectionner une note entre 1 et 5.');
+        return false;
+    }
+    clearFieldError('note-error');
+    return true;
+}
+
+function validateCommentaire() {
+    const val = document.getElementById('commentaire').value.trim();
+    if (!val) {
+        document.getElementById('commentaire').classList.add('is-invalid');
+        showFieldError('commentaire-error', 'Le commentaire est obligatoire.');
+        return false;
+    }
+    if (val.length < 10) {
+        document.getElementById('commentaire').classList.add('is-invalid');
+        showFieldError('commentaire-error', 'Le commentaire doit contenir au moins 10 caractères.');
+        return false;
+    }
+    if (containsMalicious(val)) {
+        document.getElementById('commentaire').classList.add('is-invalid');
+        showFieldError('commentaire-error', 'Le commentaire contient des caractères non autorisés.');
+        return false;
+    }
+    document.getElementById('commentaire').classList.remove('is-invalid');
+    document.getElementById('commentaire').classList.add('is-valid');
+    clearFieldError('commentaire-error');
+    return true;
+}
+
+// ── Compteur de caractères ───────────────────────────────────────────────────
+document.getElementById('commentaire').addEventListener('input', function() {
+    const count   = this.value.length;
+    const counter = document.getElementById('commentaire-count');
+    counter.textContent = count + ' / 1000';
+    counter.className   = count > 900 ? 'text-warning' : 'text-muted';
+    if (count > 10) validateCommentaire();
+});
+
+// ── Événements temps réel ────────────────────────────────────────────────────
+document.querySelectorAll('input[name="note"]').forEach(radio => {
+    radio.addEventListener('change', validateNote);
+});
+document.getElementById('commentaire').addEventListener('blur', validateCommentaire);
+
+// ── Soumission ───────────────────────────────────────────────────────────────
+document.getElementById('avisForm').addEventListener('submit', function(e) {
+    const valid = [validateNote(), validateCommentaire()].every(Boolean);
+    if (!valid) {
+        e.preventDefault();
+        const firstError = document.querySelector('.is-invalid, #note-error:not(:empty)');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+</script>
+{% endblock %}

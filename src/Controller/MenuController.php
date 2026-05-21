@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Controller;
 
 use App\Repository\MenuRepository;
@@ -14,25 +13,30 @@ class MenuController extends AbstractController
     #[Route('', name: 'app_menu_list', methods: ['GET'])]
     public function list(MenuRepository $menuRepo, Request $request): Response
     {
-        // Récupérer les filtres depuis la requête
-        $theme = $request->query->get('theme');
-        $regime = $request->query->get('regime');
-        
-        // Récupérer les menus actifs avec filtres
-        $menus = $menuRepo->findActiveMenus();
-        
-        // Appliquer les filtres côté PHP si nécessaire
-        if ($theme) {
-            $menus = array_filter($menus, fn($m) => $m['theme'] === $theme);
-        }
-        if ($regime) {
-            $menus = array_filter($menus, fn($m) => $m['regime'] === $regime);
-        }
-        
+        $theme        = $request->query->get('theme')        ?: null;
+        $regime       = $request->query->get('regime')       ?: null;
+        $prixMax      = $request->query->get('prixMax')      ? (float)$request->query->get('prixMax')      : null;
+        $prixMin      = $request->query->get('prixMin')      ? (float)$request->query->get('prixMin')      : null;
+        $prixMaxRange = $request->query->get('prixMaxRange') ? (float)$request->query->get('prixMaxRange') : null;
+        $nbPersonnes  = $request->query->get('nbPersonnes')  ? (int)$request->query->get('nbPersonnes')    : null;
+
+        $menus = $menuRepo->findActiveMenusWithFilters(
+            $theme,
+            $regime,
+            $prixMax,
+            $prixMin,
+            $prixMaxRange,
+            $nbPersonnes
+        );
+
         return $this->render('menu/list.html.twig', [
-            'menus' => $menus,
-            'theme_filter' => $theme,
-            'regime_filter' => $regime,
+            'menus'          => $menus,
+            'theme_filter'   => $theme,
+            'regime_filter'  => $regime,
+            'prixMax_filter' => $prixMax,
+            'prixMin_filter' => $prixMin,
+            'prixMaxRange_filter' => $prixMaxRange,
+            'nbPersonnes_filter'  => $nbPersonnes,
         ]);
     }
 
@@ -40,17 +44,16 @@ class MenuController extends AbstractController
     public function detail(int $id, MenuRepository $menuRepo): Response
     {
         $menu = $menuRepo->find($id);
-        
+
         if (!$menu) {
             throw $this->createNotFoundException('Menu non trouvé');
         }
-        
-        // Récupérer les notes moyennes pour ce menu
-        $ratings = $menuRepo->findMenuRating($id);
-        
+
+        $rating = $menuRepo->findMenuRating($id);
+
         return $this->render('menu/detail.html.twig', [
-            'menu' => $menu,
-            'rating' => $ratings,
+            'menu'   => $menu,
+            'rating' => $rating,
         ]);
     }
 }

@@ -1,0 +1,62 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Gérer les employés - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-8">
+        <h2>👥 Gestion des employés</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ path('app_admin_employees_new') }}" class="btn btn-success">➕ Ajouter un employé</a>
+    </div>
+</div>
+
+{% if employees|length == 0 %}
+    <div class="alert alert-info">
+        Aucun employé. <a href="{{ path('app_admin_employees_new') }}">Créer le premier</a>
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Prénom</th>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in employees %}
+                    <tr>
+                        <td>{{ employee.prenom }}</td>
+                        <td>{{ employee.nom }}</td>
+                        <td>{{ employee.mail }}</td>
+                        <td>
+                            {% if employee.actif %}
+                                <span class="badge bg-success">Actif</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="post" action="{{ path('app_admin_employees_toggle', {id: employee.id}) }}" style="display: inline;">
+                                {% if employee.actif %}
+                                    <button type="submit" class="btn btn-sm btn-warning">Désactiver</button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-sm btn-info">Activer</button>
+                                {% endif %}
+                            </form>
+                            <form method="post" action="{{ path('app_admin_employees_delete', {id: employee.id}) }}" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr ?');">
+                                <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}

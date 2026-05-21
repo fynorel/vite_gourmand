@@ -78,13 +78,79 @@
     </div>
 </div>
 
-{% if 'ROLE_ADMIN' in app.user.roles %}
-    <div class="row mt-3">
-        <div class="col-md-6">
-            <a href="{{ path('app_dashboard_avis') }}" class="btn btn-lg btn-warning w-100">
-                💬 Modérer les avis
-            </a>
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h3>Gestion</h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">📸 Gérer les images</h5>
+                <p class="card-text">Ajouter, modifier ou supprimer les images des menus</p>
+                <a href="{{ path('app_admin_images') }}" class="btn btn-primary">Gérer les images</a>
+            </div>
         </div>
     </div>
-{% endif %}
+    {% if 'ROLE_ADMIN' in app.user.roles %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">👥 Gérer les employés</h5>
+                    <p class="card-text">Créer, activer ou désactiver les comptes employés</p>
+                    <a href="{{ path('app_admin_employees_list') }}" class="btn btn-primary">Gérer les employés</a>
+                </div>
+            </div>
+        </div>
+    {% endif %}    
+</div>
+{# Accessible à l'employé ET à l'admin #}
+<div class="row mt-3">
+    <div class="col-md-6">
+        <a href="{{ path('app_dashboard_avis') }}" class="btn btn-lg btn-warning w-100">
+            💬 Modérer les avis
+            {% if dashboard.nb_avis_a_moderer > 0 %}
+                <span class="badge bg-danger ms-1">{{ dashboard.nb_avis_a_moderer }}</span>
+            {% endif %}
+        </a>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h3>Gestion Menus & Plats</h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">🍽️ Gérer les menus</h5>
+                <p class="card-text">Ajouter, modifier ou supprimer les menus</p>
+                <a href="{{ path('app_menu_management_list') }}" class="btn btn-primary">Gérer les menus</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">🥘 Gérer les plats</h5>
+                <p class="card-text">Ajouter, modifier ou supprimer les plats</p>
+                <a href="{{ path('app_plat_management_list') }}" class="btn btn-primary">Gérer les plats</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-6 mb-3">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">🕐 Gérer les horaires</h5>
+            <a href="{{ path('app_horaire_list') }}" class="btn btn-primary">Gérer les horaires</a>
+        </div>
+    </div>
+</div>
 {% endblock %}

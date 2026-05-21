@@ -1,5 +1,4 @@
 {% extends "base.html.twig" %}
-
 {% block title %}Inscription - Vite & Gourmand{% endblock %}
 
 {% block content %}
@@ -7,54 +6,70 @@
     <div class="col-md-6">
         <h2 class="mb-4">Créer un compte</h2>
 
-        {{ form_start(form) }}
+        {{ form_start(form, {'attr': {'id': 'registerForm', 'novalidate': 'novalidate'}}) }}
 
         <div class="mb-3">
             {{ form_label(form.prenom) }}
-            {{ form_widget(form.prenom, {'attr': {'class': 'form-control'}}) }}
+            {{ form_widget(form.prenom, {'attr': {'class': 'form-control', 'id': 'prenom', 'maxlength': '80'}}) }}
+            <div class="invalid-feedback" id="prenom-error"></div>
             {{ form_errors(form.prenom) }}
         </div>
 
         <div class="mb-3">
             {{ form_label(form.nom) }}
-            {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
+            {{ form_widget(form.nom, {'attr': {'class': 'form-control', 'id': 'nom', 'maxlength': '80'}}) }}
+            <div class="invalid-feedback" id="nom-error"></div>
             {{ form_errors(form.nom) }}
         </div>
 
         <div class="mb-3">
             {{ form_label(form.mail) }}
-            {{ form_widget(form.mail, {'attr': {'class': 'form-control'}}) }}
+            {{ form_widget(form.mail, {'attr': {'class': 'form-control', 'id': 'mail'}}) }}
+            <div class="invalid-feedback" id="mail-error"></div>
             {{ form_errors(form.mail) }}
         </div>
 
         <div class="mb-3">
             {{ form_label(form.gsm) }}
-            {{ form_widget(form.gsm, {'attr': {'class': 'form-control'}}) }}
+            {{ form_widget(form.gsm, {'attr': {'class': 'form-control', 'id': 'gsm', 'maxlength': '20'}}) }}
+            <div class="invalid-feedback" id="gsm-error"></div>
             {{ form_errors(form.gsm) }}
         </div>
 
         <div class="mb-3">
             {{ form_label(form.adresse) }}
-            {{ form_widget(form.adresse, {'attr': {'class': 'form-control'}}) }}
+            {{ form_widget(form.adresse, {'attr': {'class': 'form-control', 'id': 'adresse', 'maxlength': '500'}}) }}
+            <div class="invalid-feedback" id="adresse-error"></div>
             {{ form_errors(form.adresse) }}
         </div>
 
         <div class="mb-3">
             {{ form_label(form.password.first, 'Mot de passe') }}
-            {{ form_widget(form.password.first, {'attr': {'class': 'form-control'}}) }}
+            {{ form_widget(form.password.first, {'attr': {'class': 'form-control', 'id': 'password_first'}}) }}
             <small class="form-text text-muted d-block mt-1">
                 Min 10 caractères : 1 majuscule, 1 minuscule, 1 chiffre, 1 spécial
             </small>
+            <div class="invalid-feedback" id="password-error"></div>
+
+            {# Indicateur de force du mot de passe #}
+            <div class="mt-2" id="password-strength" style="display:none;">
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar" id="strength-bar" role="progressbar" style="width:0%"></div>
+                </div>
+                <small id="strength-label" class="text-muted"></small>
+            </div>
+
             {{ form_errors(form.password.first) }}
         </div>
 
         <div class="mb-3">
             {{ form_label(form.password.second, 'Confirmer le mot de passe') }}
-            {{ form_widget(form.password.second, {'attr': {'class': 'form-control'}}) }}
+            {{ form_widget(form.password.second, {'attr': {'class': 'form-control', 'id': 'password_second'}}) }}
+            <div class="invalid-feedback" id="password-confirm-error"></div>
             {{ form_errors(form.password.second) }}
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">S'inscrire</button>
+        <button type="submit" class="btn btn-primary w-100" id="submitBtn">S'inscrire</button>
 
         {{ form_end(form) }}
 
@@ -63,4 +78,149 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// ── Utilitaires ──────────────────────────────────────────────────────────────
+
+// Échappe les caractères HTML pour prévenir le XSS côté affichage
+function sanitizeInput(value) {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
+}
+
+function showError(fieldId, errorId, message) {
+    const field = document.getElementById(fieldId);
+    const error = document.getElementById(errorId);
+    field.classList.add('is-invalid');
+    field.classList.remove('is-valid');
+    error.textContent = message;
+}
+
+function showSuccess(fieldId) {
+    const field = document.getElementById(fieldId);
+    field.classList.remove('is-invalid');
+    field.classList.add('is-valid');
+}
+
+function clearError(fieldId, errorId) {
+    const field = document.getElementById(fieldId);
+    const error = document.getElementById(errorId);
+    field.classList.remove('is-invalid', 'is-valid');
+    if (error) error.textContent = '';
+}
+
+// ── Validations individuelles ────────────────────────────────────────────────
+
+function validatePrenom() {
+    const val = document.getElementById('prenom').value.trim();
+    if (!val) { showError('prenom', 'prenom-error', 'Le prénom est obligatoire.'); return false; }
+    if (val.length < 2) { showError('prenom', 'prenom-error', 'Le prénom doit contenir au moins 2 caractères.'); return false; }
+    if (/<|>|script/i.test(val)) { showError('prenom', 'prenom-error', 'Le prénom contient des caractères non autorisés.'); return false; }
+    showSuccess('prenom'); return true;
+}
+
+function validateNom() {
+    const val = document.getElementById('nom').value.trim();
+    if (!val) { showError('nom', 'nom-error', 'Le nom est obligatoire.'); return false; }
+    if (val.length < 2) { showError('nom', 'nom-error', 'Le nom doit contenir au moins 2 caractères.'); return false; }
+    if (/<|>|script/i.test(val)) { showError('nom', 'nom-error', 'Le nom contient des caractères non autorisés.'); return false; }
+    showSuccess('nom'); return true;
+}
+
+function validateMail() {
+    const val = document.getElementById('mail').value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!val) { showError('mail', 'mail-error', 'L\'adresse email est obligatoire.'); return false; }
+    if (!emailRegex.test(val)) { showError('mail', 'mail-error', 'L\'adresse email n\'est pas valide.'); return false; }
+    showSuccess('mail'); return true;
+}
+
+function validateGsm() {
+    const val = document.getElementById('gsm').value.trim();
+    const gsmRegex = /^[\d\s\+\-\.]{7,20}$/;
+    if (val && !gsmRegex.test(val)) { showError('gsm', 'gsm-error', 'Le numéro de GSM n\'est pas valide.'); return false; }
+    showSuccess('gsm'); return true;
+}
+
+function validateAdresse() {
+    const val = document.getElementById('adresse').value.trim();
+    if (/<|>|script/i.test(val)) { showError('adresse', 'adresse-error', 'L\'adresse contient des caractères non autorisés.'); return false; }
+    showSuccess('adresse'); return true;
+}
+
+function validatePassword() {
+    const val = document.getElementById('password_first').value;
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{10,}$/;
+    const strengthBar  = document.getElementById('strength-bar');
+    const strengthLabel = document.getElementById('strength-label');
+    const strengthDiv  = document.getElementById('password-strength');
+
+    if (!val) { showError('password_first', 'password-error', 'Le mot de passe est obligatoire.'); strengthDiv.style.display = 'none'; return false; }
+
+    // Calcul force
+    strengthDiv.style.display = 'block';
+    let score = 0;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[a-z]/.test(val)) score++;
+    if (/\d/.test(val)) score++;
+    if (/[\W_]/.test(val)) score++;
+
+    const colors = ['', 'bg-danger', 'bg-warning', 'bg-info', 'bg-primary', 'bg-success'];
+    const labels = ['', 'Très faible', 'Faible', 'Moyen', 'Fort', 'Très fort'];
+    strengthBar.className = 'progress-bar ' + (colors[score] || '');
+    strengthBar.style.width = (score * 20) + '%';
+    strengthLabel.textContent = labels[score] || '';
+
+    if (!regex.test(val)) {
+        showError('password_first', 'password-error', 'Min. 10 caractères : 1 majuscule, 1 minuscule, 1 chiffre, 1 spécial.');
+        return false;
+    }
+    showSuccess('password_first'); return true;
+}
+
+function validatePasswordConfirm() {
+    const val1 = document.getElementById('password_first').value;
+    const val2 = document.getElementById('password_second').value;
+    if (!val2) { showError('password_second', 'password-confirm-error', 'La confirmation est obligatoire.'); return false; }
+    if (val1 !== val2) { showError('password_second', 'password-confirm-error', 'Les mots de passe ne correspondent pas.'); return false; }
+    showSuccess('password_second'); return true;
+}
+
+// ── Événements temps réel ────────────────────────────────────────────────────
+document.getElementById('prenom').addEventListener('blur', validatePrenom);
+document.getElementById('nom').addEventListener('blur', validateNom);
+document.getElementById('mail').addEventListener('blur', validateMail);
+document.getElementById('gsm').addEventListener('blur', validateGsm);
+document.getElementById('adresse').addEventListener('blur', validateAdresse);
+document.getElementById('password_first').addEventListener('input', validatePassword);
+document.getElementById('password_second').addEventListener('input', validatePasswordConfirm);
+
+// ── Soumission du formulaire ─────────────────────────────────────────────────
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const valid = [
+        validatePrenom(),
+        validateNom(),
+        validateMail(),
+        validateGsm(),
+        validateAdresse(),
+        validatePassword(),
+        validatePasswordConfirm()
+    ].every(Boolean);
+
+    if (!valid) {
+        e.preventDefault();
+        // Scroller vers la première erreur
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+</script>
 {% endblock %}

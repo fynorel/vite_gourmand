@@ -1,67 +1,112 @@
-{% extends "base.html.twig" %}
+{% extends 'base.html.twig' %}
 
 {% block title %}Accueil - Vite & Gourmand{% endblock %}
 
 {% block content %}
+
+{# ── HERO ── #}
 <div class="row mb-5">
-    <div class="col-md-8 mx-auto text-center">
-        <h1 class="display-4 mb-4">Bienvenue chez Vite & Gourmand</h1>
-        <p class="lead">Découvrez nos menus gourmands pour vos événements</p>
+    <div class="col-md-8 mx-auto text-center py-5">
+        <h1 class="display-4 mb-3">Bienvenue chez Vite & Gourmand</h1>
+        <p class="lead mb-4">Des menus gourmands et sur-mesure pour tous vos événements, livrés avec passion depuis 25 ans à Bordeaux.</p>
         <a href="{{ path('app_menu_list') }}" class="btn btn-primary btn-lg">Voir nos menus</a>
     </div>
 </div>
 
-<!-- Menus vedettes -->
+{# ── PRÉSENTATION DE L'ENTREPRISE ── #}
+<div class="row align-items-center mb-5 py-4 bg-light rounded">
+    <div class="col-md-6 px-4">
+        <h2 class="mb-3">Notre histoire</h2>
+        <p>
+            <strong>Vite & Gourmand</strong>, c'est l'aventure de deux passionnés de cuisine : <strong>Julie</strong> et <strong>José</strong>.
+            Depuis <strong>25 ans</strong>, ils proposent leurs prestations culinaires pour tous vos événements,
+            qu'il s'agisse d'un simple repas de Noël, de Pâques ou de tout autre occasion.
+        </p>
+        <p>
+            Basés à <strong>Bordeaux</strong>, ils mettent un point d'honneur à faire évoluer leurs menus en permanence
+            afin de vous surprendre à chaque prestation.
+        </p>
+    </div>
+    <div class="col-md-6 px-4">
+        <h2 class="mb-3">Notre professionnalisme</h2>
+        <ul class="list-unstyled">
+            <li class="mb-2">✅ <strong>25 ans d'expérience</strong> dans la restauration événementielle</li>
+            <li class="mb-2">✅ <strong>Menus en constante évolution</strong> adaptés à chaque saison</li>
+            <li class="mb-2">✅ <strong>Livraison à domicile</strong> sur Bordeaux et ses alentours</li>
+            <li class="mb-2">✅ <strong>Options végétariennes et vegan</strong> disponibles</li>
+            <li class="mb-2">✅ <strong>Respect des allergènes</strong> mentionnés sur chaque plat</li>
+            <li class="mb-2">✅ <strong>Commande simple et rapide</strong> en ligne</li>
+        </ul>
+    </div>
+</div>
+
+{# ── MENUS VEDETTES ── #}
 <h2 class="mb-4">Nos menus vedettes</h2>
 <div class="row mb-5">
     {% for menu in menus|slice(0, 3) %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">{{ menu.titre }}</h5>
-                    <p class="card-text">{{ menu.description|slice(0, 100) }}...</p>
-                    <p class="text-muted">
-                        <small>{{ menu.nb_personnes_min }} personnes minimum</small>
-                    </p>
-                </div>
-                <div class="card-footer bg-white">
-                    <strong class="text-primary">{{ menu.prix }}€</strong>
-                    <a href="{{ path('app_menu_detail', {'id': menu.id_menu}) }}" class="btn btn-sm btn-outline-primary float-end">
-                        Détails
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <span class="badge bg-secondary mb-2">{{ menu.theme|capitalize }}</span>
+                <h5 class="card-title">{{ menu.titre }}</h5>
+                <p class="card-text text-muted">
+                    {{ menu.description|slice(0, 100) }}{% if menu.description|length > 100 %}...{% endif %}
+                </p>
+                <p class="text-muted mb-0">
+<small class="text-muted">👥 {{ menu.nb_personnes_min }} personnes minimum</small>
+                </p>
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                <strong class="text-primary fs-5">{{ menu.prix }} €</strong>
+                    <a href="{{ path('app_menu_detail', {id: menu.id_menu}) }}"
+                        Voir le détail
                     </a>
-                </div>
             </div>
         </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <p class="text-muted text-center">Aucun menu disponible pour le moment.</p>
+    </div>
     {% endfor %}
 </div>
 
-<!-- Avis clients -->
+<div class="text-center mb-5">
+    <a href="{{ path('app_menu_list') }}" class="btn btn-outline-primary">Voir tous nos menus</a>
+</div>
+
+{# ── AVIS CLIENTS ── #}
 <h2 class="mb-4">Avis de nos clients</h2>
 <div class="row">
     {% if avis is empty %}
-        <div class="col-12">
-            <p class="text-muted text-center">Aucun avis pour le moment</p>
-        </div>
+    <div class="col-12">
+        <p class="text-muted text-center">Aucun avis pour le moment.</p>
+    </div>
     {% else %}
         {% for avi in avis|slice(0, 3) %}
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            {% for i in 1..avi.note %}⭐{% endfor %}
-                        </h5>
-                        <p class="card-text">"{{ avi.commentaire }}"</p>
-                        <p class="text-muted">
-                            <small>{{ avi.auteur }} - {{ avi.menu_titre }}</small>
-                        </p>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="mb-2">
+                        {% for i in 1..avi.note %}⭐{% endfor %}
+                        {% for i in (avi.note + 1)..5 %}☆{% endfor %}
                     </div>
+                    <p class="card-text fst-italic">"{{ avi.commentaire }}"</p>
+                </div>
+                <div class="card-footer bg-white text-muted">
+                    <small>
+                        {{ avi.auteur_pseudo }}
+                        — {{ avi.menu_titre }}
+                    </small>
                 </div>
             </div>
+        </div>
         {% endfor %}
     {% endif %}
 </div>
 
-<div class="text-center mt-5">
+<div class="text-center mt-3 mb-5">
     <a href="{{ path('app_avis_list') }}" class="btn btn-secondary">Voir tous les avis</a>
 </div>
+
 {% endblock %}

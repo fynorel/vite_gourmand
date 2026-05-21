@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier l'horaire - {{ horaire.jourNom }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-md-5">
+
+    <h1 class="mb-4">🕐 Modifier : {{ horaire.jourNom }}</h1>
+
+    <form method="POST" action="{{ path('app_horaire_edit', {id: horaire.id}) }}">
+
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="est_ferme" name="est_ferme"
+                   {{ horaire.estFerme ? 'checked' }}
+                   onchange="toggleHoraires(this)">
+            <label class="form-check-label" for="est_ferme">Fermé ce jour</label>
+        </div>
+
+        <div id="horaires_fields" {{ horaire.estFerme ? 'style="display:none"' }}>
+            <div class="mb-3">
+                <label for="heure_ouverture" class="form-label">Heure d'ouverture</label>
+                <input type="time" class="form-control" id="heure_ouverture" name="heure_ouverture"
+                       value="{{ horaire.heureOuverture ? horaire.heureOuverture|date('H:i') : '' }}">
+            </div>
+            <div class="mb-3">
+                <label for="heure_fermeture" class="form-label">Heure de fermeture</label>
+                <input type="time" class="form-control" id="heure_fermeture" name="heure_fermeture"
+                       value="{{ horaire.heureFermeture ? horaire.heureFermeture|date('H:i') : '' }}">
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-warning">Enregistrer</button>
+            <a href="{{ path('app_horaire_list') }}" class="btn btn-secondary">Annuler</a>
+        </div>
+
+    </form>
+</div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+function toggleHoraires(checkbox) {
+    document.getElementById('horaires_fields').style.display = checkbox.checked ? 'none' : 'block';
+}
+</script>
+{% endblock %}

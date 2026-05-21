@@ -1,0 +1,36 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Menus - Vite & Gourmand{% endblock %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-12">
+        <h2>🍽️ Menus</h2>
+    </div>
+</div>
+
+{% if menus|length == 0 %}
+    <div class="alert alert-info">
+        Aucun menu disponible.
+    </div>
+{% else %}
+    <div class="row">
+        {% for menu in menus %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ menu.titre }}</h5>
+                        <p class="card-text">{{ menu.description|slice(0, 100) }}...</p>
+                        <p class="text-muted">
+                            <strong>Prix :</strong> {{ menu.prix|number_format(2, ',', ' ') }} €<br>
+                            <strong>Personnes :</strong> {{ menu.nbPersonnesMin }}
+                        </p>
+                        <span class="badge bg-secondary">{{ menu.regime }}</span>
+                        <a href="{{ path('app_menu_detail', {id: menu.id}) }}" class="btn btn-primary btn-sm mt-2">Voir détails</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

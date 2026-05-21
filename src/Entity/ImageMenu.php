@@ -2,13 +2,10 @@
 
 namespace App\Entity;
 
-use App\Repository\ImageMenuRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: ImageMenuRepository::class)]
+#[ORM\Entity]
 #[ORM\Table(name: 'image_menu')]
-#[ORM\Index(name: 'idx_id_menu', columns: ['id_menu'])]
-#[ORM\Index(name: 'idx_id_menu_ordre', columns: ['id_menu', 'ordre'])]
 class ImageMenu
 {
     #[ORM\Id]
@@ -16,35 +13,22 @@ class ImageMenu
     #[ORM\Column(name: 'id_image')]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Menu::class, inversedBy: 'images', cascade: ['remove'])]
-    #[ORM\JoinColumn(name: 'id_menu', nullable: false, onDelete: 'CASCADE')]
-    private ?Menu $menu = null;
-
-    #[ORM\Column(type: 'string', length: 500)]
+    #[ORM\Column(length: 500)]
     private ?string $url = null;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[ORM\Column(length: 255)]
     private ?string $alt = null;
 
-    #[ORM\Column(type: 'integer')]
-    private int $ordre = 0;
+    #[ORM\Column]
+    private ?int $ordre = 0;
 
-    // ───────────────── GETTERS / SETTERS ─────────────────
+    #[ORM\ManyToOne(targetEntity: Menu::class)]
+    #[ORM\JoinColumn(name: 'id_menu', referencedColumnName: 'id_menu')]
+    private ?Menu $menu = null;
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getMenu(): ?Menu
-    {
-        return $this->menu;
-    }
-
-    public function setMenu(?Menu $menu): static
-    {
-        $this->menu = $menu;
-        return $this;
     }
 
     public function getUrl(): ?string
@@ -69,7 +53,7 @@ class ImageMenu
         return $this;
     }
 
-    public function getOrdre(): int
+    public function getOrdre(): ?int
     {
         return $this->ordre;
     }
@@ -77,6 +61,17 @@ class ImageMenu
     public function setOrdre(int $ordre): static
     {
         $this->ordre = $ordre;
+        return $this;
+    }
+
+    public function getMenu(): ?Menu
+    {
+        return $this->menu;
+    }
+
+    public function setMenu(?Menu $menu): static
+    {
+        $this->menu = $menu;
         return $this;
     }
 }

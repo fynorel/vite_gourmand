@@ -13,6 +13,7 @@ RUN apt-get update -y \
         libxml2-dev \
         pkg-config \
         libssl-dev \
+        libzstd-dev \
         autoconf \
         g++ \
         make \

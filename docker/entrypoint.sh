@@ -3,9 +3,12 @@ set -e
 
 echo "==> Vite & Gourmand — Démarrage"
 
-echo "==> Vidage du cache..."
-php bin/console cache:clear --env=prod --no-warmup 2>/dev/null || true
-php bin/console cache:warmup --env=prod 2>/dev/null || true
+echo "==> Nettoyage cache..."
+rm -rf var/cache/prod var/cache/dev
 
-echo "==> Demarrage Nginx + PHP-FPM..."
+echo "==> Génération cache prod..."
+APP_ENV=prod php bin/console cache:clear --no-warmup
+APP_ENV=prod php bin/console cache:warmup
+
+echo "==> Démarrage Nginx + PHP-FPM..."
 exec supervisord -c /etc/supervisor/conf.d/supervisord.conf

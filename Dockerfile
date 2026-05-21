@@ -36,6 +36,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Puis installer les dépendances avec les scripts (bin/console est disponible)
+ENV APP_ENV=prod
 RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
     --no-dev \
     --optimize-autoloader \

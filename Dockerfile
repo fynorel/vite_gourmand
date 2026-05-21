@@ -42,7 +42,8 @@ RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
     --optimize-autoloader \
     --no-interaction \
     --prefer-dist \
-    --ignore-platform-reqs
+    --ignore-platform-reqs \
+    --no-scripts
 
 RUN mkdir -p var/cache var/log \
     && chown -R www-data:www-data /var/www/html \

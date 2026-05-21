@@ -18,7 +18,7 @@ RUN apt-get update -y \
         g++ \
         make \
     && docker-php-ext-install pdo pdo_mysql zip intl mbstring xml opcache \
-    && pecl install mongodb \
+    && pecl install mongodb-1.17.0 \
     && docker-php-ext-enable mongodb \
     && apt-get purge -y autoconf g++ make \
     && apt-get autoremove -y \

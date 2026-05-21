@@ -98,7 +98,7 @@ Ou insérez-le directement en base :
 
 ```sql
 INSERT INTO utilisateur (nom, prenom, mail, gsm, adresse, mdp_hash, role, actif, compteur_authentification, date_creation)
-VALUES ('ADMIN', 'Jose', 'jose@vitegourmand.fr', '0600000000', '12 rue des Chartrons, 33000 Bordeaux', 'HASH_DU_MOT_DE_PASSE', 'ROLE_ADMIN', 1, 0, NOW());
+VALUES ('ADMIN', 'Jose', 'jose@vite-gourmand.fr', '0600000000', '12 rue des Chartrons, 33000 Bordeaux', 'HASH_DU_MOT_DE_PASSE', 'ROLE_ADMIN', 1, 0, NOW());
 ```
 
 > Le mot de passe doit être hashé avec Symfony. Utilisez : `php bin/console security:hash-password`
@@ -129,9 +129,9 @@ L'application est accessible sur : **http://localhost:8000**
 
 | Rôle        | Email                        | Mot de passe    |
 |-------------|------------------------------|-----------------|
-| Admin       | jose@vitegourmand.fr         | A définir       |
-| Employé     | julie@vitegourmand.fr        | A définir       |
-| Utilisateur | utilisateur@test.fr          | A définir       |
+| Admin       | jose@vite-gourmand.fr        | Admin@1234      |
+| Employé     | bruno@exemple.fr             | Employe@1234    |
+| Utilisateur | henri.dunand@exemple.fr      | Terminator@5678 |
 
 > Les mots de passes exacts sont communiqués séparément dans le manuel d'utilisation.
 

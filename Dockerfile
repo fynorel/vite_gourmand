@@ -1,21 +1,20 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.3-fpm
 
-RUN apk update && apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     nginx \
     supervisor \
     git \
     curl \
     unzip \
     libzip-dev \
-    icu-dev \
-    icu-libs \
-    oniguruma-dev \
+    libicu-dev \
+    libonig-dev \
     libxml2-dev \
-    openssl-dev \
+    libssl-dev \
+    pkg-config \
     autoconf \
     g++ \
     make \
-    pkgconfig \
     ca-certificates \
     && docker-php-ext-install \
         pdo \
@@ -25,10 +24,10 @@ RUN apk update && apk add --no-cache \
         mbstring \
         xml \
         opcache \
-    && pecl install mongodb-1.20.0 \
+    && pecl install mongodb \
     && docker-php-ext-enable mongodb \
-    && apk del autoconf g++ make pkgconfig \
-    && rm -rf /tmp/pear
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -42,15 +41,12 @@ WORKDIR /var/www/html
 
 COPY composer.json composer.lock ./
 
-RUN php -r "echo PHP_VERSION;" \
-    && php -m \
-    && COMPOSER_MEMORY_LIMIT=-1 composer install \
-        --no-dev \
-        --optimize-autoloader \
-        --no-interaction \
-        --prefer-dist \
-        --no-scripts \
-        -v
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --prefer-dist \
+    --no-scripts
 
 COPY . .
 

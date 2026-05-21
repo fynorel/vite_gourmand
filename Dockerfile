@@ -1,4 +1,4 @@
-FROM php:8.4-fpm-bookworm
+FROM php:8.3-fpm-bullseye
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 

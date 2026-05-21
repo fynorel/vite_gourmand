@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-bullseye
+FROM php:8.4-fpm-bullseye
 
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \

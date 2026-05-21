@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-bullseye
+FROM php:8.4-fpm-bullseye
 
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
@@ -20,6 +20,7 @@ RUN apt-get update -y \
     && docker-php-ext-install pdo pdo_mysql zip intl mbstring xml opcache \
     && pecl install mongodb-1.16.2 \
     && docker-php-ext-enable mongodb \
+    && echo "extension=mongodb.so" >> /usr/local/etc/php/conf.d/mongodb.ini \
     && rm -rf /var/lib/apt/lists/* /tmp/pear
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer

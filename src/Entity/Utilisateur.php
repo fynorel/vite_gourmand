@@ -45,7 +45,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'boolean')]
     private bool $actif = true;
 
-    #[ORM\Column(name: 'compteur_authentification', type: 'integer')]
+    #[ORM\Column(name: 'failed_attempts', type: 'integer')]
     private int $compteur_authentification = 0;
 
     #[ORM\Column(name: 'date_creation', type: 'datetime_immutable')]

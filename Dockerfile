@@ -1,6 +1,6 @@
 FROM php:8.3-fpm-alpine
 
-RUN apk add --no-cache \
+RUN apk update && apk add --no-cache \
     nginx \
     supervisor \
     git \

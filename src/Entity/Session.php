@@ -11,7 +11,7 @@ class Session
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(name: 'id_session')]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'sessions')]
@@ -24,10 +24,10 @@ class Session
     #[ORM\Column(enumType: UserRole::class)]
     private ?UserRole $role = null;
 
-    #[ORM\Column]
+    #[ORM\Column(name: 'id_session')]
     private ?\DateTime $expire = null;
 
-    #[ORM\Column]
+    #[ORM\Column(name: 'id_session')]
     private ?\DateTime $createdAt = null;
 
     public function getId(): ?int

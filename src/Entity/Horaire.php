@@ -13,7 +13,7 @@ class Horaire
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'id')]
+    #[ORM\Column(name: 'id_horaire')]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Entreprise::class, inversedBy: 'horaires', cascade: ['remove'])]

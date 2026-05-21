@@ -15,7 +15,7 @@ class Plat
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'id')]
+    #[ORM\Column(name: 'id_plat')]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 120)]

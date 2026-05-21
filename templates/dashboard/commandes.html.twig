@@ -75,6 +75,14 @@
                 </span>
             </td>
             <td>
+                {# Bouton historique (toujours visible) #}
+                <button class="btn btn-sm btn-outline-info w-100 mb-1"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalHistorique{{ commande.id }}"
+                        aria-label="Voir l'historique de la commande #{{ commande.id }}">
+                    📋 Historique
+                </button>
+
                 {# Changer le statut #}
                 {% if commande.statut not in ['TERMINEE', 'ANNULEE'] %}
                 <form method="POST"
@@ -103,9 +111,78 @@
             </td>
         </tr>
 
-        {# Modal annulation #}
+        {# ── Modal historique ── #}
+        <div class="modal fade" id="modalHistorique{{ commande.id }}" tabindex="-1"
+             aria-labelledby="modalHistoriqueLabel{{ commande.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalHistoriqueLabel{{ commande.id }}">
+                            📋 Historique — Commande #{{ commande.id }}
+                            ({{ commande.utilisateur.prenom }} {{ commande.utilisateur.nom }})
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 p-3 bg-light rounded">
+                            <strong>Menu :</strong> {{ commande.menu.titre }}<br>
+                            <strong>Date prestation :</strong> {{ commande.datePrestation|date('d/m/Y à H:i') }}<br>
+                            <strong>Total :</strong> {{ commande.prixTotal }} €
+                        </div>
+
+                        {% if commande.historiques is empty %}
+                            <div class="alert alert-info mb-0">
+                                Aucun historique disponible pour cette commande.
+                            </div>
+                        {% else %}
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Statut</th>
+                                        <th>Modifié par</th>
+                                        <th>Commentaire</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for historique in commande.historiques %}
+                                    <tr>
+                                        <td>
+                                            <small>{{ historique.changedAt|date('d/m/Y à H:i') }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ colors[historique.statut] ?? 'secondary' }}">
+                                                {{ historique.statut|replace({'_': ' '}) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small>
+                                                {{ historique.changedBy.prenom }}
+                                                {{ historique.changedBy.nom }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ historique.commentaire ?: '—' }}
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── Modal annulation ── #}
         {% if commande.statut not in ['TERMINEE', 'ANNULEE'] %}
-        <div class="modal fade" id="modalAnnuler{{ commande.id }}" tabindex="-1">
+        <div class="modal fade" id="modalAnnuler{{ commande.id }}" tabindex="-1"
+             aria-labelledby="modalAnnulerLabel{{ commande.id }}" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <form method="POST"
@@ -113,8 +190,10 @@
                         <input type="hidden" name="_token"
                                value="{{ csrf_token('annuler_' ~ commande.id) }}">
                         <div class="modal-header">
-                            <h5 class="modal-title">Annuler la commande #{{ commande.id }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            <h5 class="modal-title" id="modalAnnulerLabel{{ commande.id }}">
+                                Annuler la commande #{{ commande.id }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">

@@ -1,42 +1,161 @@
 {% extends 'base.html.twig' %}
-
 {% block title %}Contact - Vite & Gourmand{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-7">
-
         <h1 class="mb-2">Contactez-nous</h1>
         <p class="text-muted mb-4">
             Une question, une demande particulière ? Remplissez le formulaire ci-dessous,
             nous vous répondrons dans les plus brefs délais.
         </p>
 
-        <form method="POST" action="{{ path('app_contact') }}">
+        <form method="POST" action="{{ path('app_contact') }}" id="contactForm" novalidate>
 
             <div class="mb-3">
-                <label for="titre" class="form-label">Sujet <span class="text-danger">*</span></label>
+                <label for="titre" class="form-label">Sujet <span class="text-danger" aria-hidden="true">*</span></label>
                 <input type="text" class="form-control" id="titre" name="titre"
-                       placeholder="Ex : Demande de devis pour un mariage" required>
+                       placeholder="Ex : Demande de devis pour un mariage"
+                       maxlength="200"
+                       aria-required="true"
+                       aria-describedby="titre-error">
+                <div class="invalid-feedback" id="titre-error" role="alert"></div>
             </div>
 
             <div class="mb-3">
-                <label for="description" class="form-label">Message <span class="text-danger">*</span></label>
+                <label for="description" class="form-label">Message <span class="text-danger" aria-hidden="true">*</span></label>
                 <textarea class="form-control" id="description" name="description"
-                          rows="6" placeholder="Décrivez votre demande..." required></textarea>
+                          rows="6"
+                          placeholder="Décrivez votre demande..."
+                          maxlength="2000"
+                          aria-required="true"
+                          aria-describedby="description-error description-count"></textarea>
+                <div class="d-flex justify-content-between">
+                    <div class="invalid-feedback d-block" id="description-error" role="alert"></div>
+                    <small class="text-muted" id="description-count">0 / 2000</small>
+                </div>
             </div>
 
             <div class="mb-4">
-                <label for="mail" class="form-label">Votre adresse mail <span class="text-danger">*</span></label>
+                <label for="mail" class="form-label">Votre adresse mail <span class="text-danger" aria-hidden="true">*</span></label>
                 <input type="email" class="form-control" id="mail" name="mail"
-                       placeholder="votre@email.com" required>
+                       placeholder="votre@email.com"
+                       aria-required="true"
+                       aria-describedby="mail-error">
                 <div class="form-text">Nous utiliserons cette adresse pour vous répondre.</div>
+                <div class="invalid-feedback" id="mail-error" role="alert"></div>
             </div>
 
             <button type="submit" class="btn btn-primary">Envoyer le message</button>
 
         </form>
-
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+// ── Utilitaires ──────────────────────────────────────────────────────────────
+function showError(fieldId, errorId, message) {
+    const field = document.getElementById(fieldId);
+    const error = document.getElementById(errorId);
+    field.classList.add('is-invalid');
+    field.classList.remove('is-valid');
+    if (error) error.textContent = message;
+}
+
+function showSuccess(fieldId) {
+    const field = document.getElementById(fieldId);
+    field.classList.remove('is-invalid');
+    field.classList.add('is-valid');
+}
+
+function containsMalicious(value) {
+    return /<|>|script|javascript:|on\w+=/i.test(value);
+}
+
+// ── Validations ──────────────────────────────────────────────────────────────
+function validateTitre() {
+    const val = document.getElementById('titre').value.trim();
+    if (!val) {
+        showError('titre', 'titre-error', 'Le sujet est obligatoire.');
+        return false;
+    }
+    if (val.length < 5) {
+        showError('titre', 'titre-error', 'Le sujet doit contenir au moins 5 caractères.');
+        return false;
+    }
+    if (containsMalicious(val)) {
+        showError('titre', 'titre-error', 'Le sujet contient des caractères non autorisés.');
+        return false;
+    }
+    showSuccess('titre');
+    return true;
+}
+
+function validateDescription() {
+    const val = document.getElementById('description').value.trim();
+    if (!val) {
+        showError('description', 'description-error', 'Le message est obligatoire.');
+        return false;
+    }
+    if (val.length < 10) {
+        showError('description', 'description-error', 'Le message doit contenir au moins 10 caractères.');
+        return false;
+    }
+    if (containsMalicious(val)) {
+        showError('description', 'description-error', 'Le message contient des caractères non autorisés.');
+        return false;
+    }
+    showSuccess('description');
+    return true;
+}
+
+function validateMail() {
+    const val = document.getElementById('mail').value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!val) {
+        showError('mail', 'mail-error', 'L\'adresse email est obligatoire.');
+        return false;
+    }
+    if (!emailRegex.test(val)) {
+        showError('mail', 'mail-error', 'L\'adresse email n\'est pas valide.');
+        return false;
+    }
+    if (containsMalicious(val)) {
+        showError('mail', 'mail-error', 'L\'adresse email contient des caractères non autorisés.');
+        return false;
+    }
+    showSuccess('mail');
+    return true;
+}
+
+// ── Compteur de caractères ───────────────────────────────────────────────────
+document.getElementById('description').addEventListener('input', function() {
+    const count = this.value.length;
+    const counter = document.getElementById('description-count');
+    counter.textContent = count + ' / 2000';
+    counter.className = count > 1800 ? 'text-warning' : (count >= 2000 ? 'text-danger' : 'text-muted');
+    validateDescription();
+});
+
+// ── Événements temps réel ────────────────────────────────────────────────────
+document.getElementById('titre').addEventListener('blur', validateTitre);
+document.getElementById('mail').addEventListener('blur', validateMail);
+
+// ── Soumission ───────────────────────────────────────────────────────────────
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    const valid = [
+        validateTitre(),
+        validateDescription(),
+        validateMail()
+    ].every(Boolean);
+
+    if (!valid) {
+        e.preventDefault();
+        const firstError = document.querySelector('.is-invalid');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+</script>
 {% endblock %}

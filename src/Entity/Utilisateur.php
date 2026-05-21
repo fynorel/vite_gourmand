@@ -81,8 +81,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-       
-        return [$this->role];
+        return match($this->role) {
+            'ADMINISTRATEUR' => ['ROLE_ADMIN'],
+            'EMPLOYE'        => ['ROLE_EMPLOYE'],
+            default          => ['ROLE_USER'],
+        };
     }
 
     public function getPassword(): ?string

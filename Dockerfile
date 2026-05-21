@@ -18,7 +18,7 @@ RUN apt-get update -y \
         g++ \
         make \
     && docker-php-ext-install pdo pdo_mysql zip intl mbstring xml opcache \
-    && pecl install mongodb-1.16.2 \
+    && pecl install mongodb-1.15.3 \
     && docker-php-ext-enable mongodb \
     && echo "extension=mongodb.so" >> /usr/local/etc/php/conf.d/mongodb.ini \
     && rm -rf /var/lib/apt/lists/* /tmp/pear

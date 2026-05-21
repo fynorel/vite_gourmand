@@ -60,8 +60,8 @@ class Menu
     /** @var Collection<int, Plat> */
     #[ORM\ManyToMany(targetEntity: Plat::class, inversedBy: 'menus')]
     #[ORM\JoinTable(name: 'menu_plat')]
-    #[ORM\JoinColumn(name: 'id_menu', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    #[ORM\InverseJoinColumn(name: 'id_plat', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_menu', referencedColumnName: 'id_menu', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'id_plat', referencedColumnName: 'id_plat', onDelete: 'CASCADE')]
     private Collection $plats;
     
     /** @var Collection<int, Commande> */

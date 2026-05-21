@@ -31,7 +31,7 @@ class MenuManagementController extends AbstractController
     {
         $plats = $em->getRepository(Plat::class)->findBy(['actif' => true], ['nom' => 'ASC']);
 
-        $grouped = ['entree' => [], 'plat' => [], 'dessert' => []];
+        $grouped = ['ENTREE' => [], 'PLAT' => [], 'DESSERT' => []];
         foreach ($plats as $plat) {
             $type = $plat->getType();
             if (array_key_exists($type, $grouped)) {

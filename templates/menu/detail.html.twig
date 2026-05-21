@@ -64,11 +64,11 @@
         {% set plats_principaux = [] %}
         {% set desserts = [] %}
         {% for plat in menu.plats %}
-            {% if plat.type == 'entree' %}
+            {% if plat.type == 'ENTREE' %}
                 {% set entrees = entrees|merge([plat]) %}
-            {% elseif plat.type == 'plat' %}
+            {% elseif plat.type == 'PLAT' %}
                 {% set plats_principaux = plats_principaux|merge([plat]) %}
-            {% elseif plat.type == 'dessert' %}
+            {% elseif plat.type == 'DESSERT' %}
                 {% set desserts = desserts|merge([plat]) %}
             {% endif %}
         {% endfor %}

@@ -65,7 +65,7 @@
             <div class="mb-2">
                 <p class="mb-1 text-muted">Entrées</p>
                 <div class="d-flex flex-wrap gap-2 ps-2">
-                    {% for plat in platsByType.entree %}
+                    {% for plat in platsByType.ENTREE %}
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox"
                                    name="plats[]" value="{{ plat.id }}" id="plat_{{ plat.id }}">
@@ -80,7 +80,7 @@
             <div class="mb-2">
                 <p class="mb-1 text-muted">Plats</p>
                 <div class="d-flex flex-wrap gap-2 ps-2">
-                    {% for plat in platsByType.plat %}
+                    {% for plat in platsByType.PLAT %}
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox"
                                    name="plats[]" value="{{ plat.id }}" id="plat_{{ plat.id }}">
@@ -95,7 +95,7 @@
             <div class="mb-2">
                 <p class="mb-1 text-muted">Desserts</p>
                 <div class="d-flex flex-wrap gap-2 ps-2">
-                    {% for plat in platsByType.dessert %}
+                    {% for plat in platsByType.DESSERT %}
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox"
                                    name="plats[]" value="{{ plat.id }}" id="plat_{{ plat.id }}">

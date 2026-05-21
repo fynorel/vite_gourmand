@@ -1,7 +1,7 @@
 <?php
-
 namespace App\Security;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,16 +21,23 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
 
     public const LOGIN_ROUTE = 'app_login';
 
-    public function __construct(private UrlGeneratorInterface $urlGenerator) {}
+    public function __construct(
+        private UrlGeneratorInterface $urlGenerator,
+        private LoggerInterface $logger
+    ) {}
 
     public function authenticate(Request $request): Passport
     {
         $email = $request->request->get('_username', '');
+        $password = $request->request->get('_password', '');
+        
+        $this->logger->info('Login attempt', ['email' => $email, 'password_length' => strlen($password)]);
+        
         $request->getSession()->set('_security.last_username', $email);
 
         return new Passport(
             new UserBadge($email),
-            new PasswordCredentials($request->request->get('_password', '')),
+            new PasswordCredentials($password),
             [
                 new CsrfTokenBadge('authenticate', $request->request->get('_csrf_token')),
                 new RememberMeBadge(),
@@ -40,9 +47,12 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        $this->logger->info('Login success', ['user' => $token->getUserIdentifier(), 'roles' => $token->getRoleNames()]);
+        
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
             return new RedirectResponse($targetPath);
         }
+
         return new RedirectResponse($this->urlGenerator->generate('app_home'));
     }
 

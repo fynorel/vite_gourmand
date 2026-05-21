@@ -18,7 +18,7 @@ class AdminEmployeeController extends AbstractController
     #[Route('', name: 'app_admin_employees_list', methods: ['GET'])]
     public function list(EntityManagerInterface $em): Response
     {
-        $employees = $em->getRepository(Utilisateur::class)->findBy(['role' => 'ROLE_EMPLOYE']);
+        $employees = $em->getRepository(Utilisateur::class)->findBy(['role' => 'EMPLOYE']);
 
         return $this->render('admin/employees/list.html.twig', [
             'employees' => $employees,
@@ -50,7 +50,7 @@ class AdminEmployeeController extends AbstractController
             $employee->setPrenom($prenom);
             $employee->setNom($nom);
             $employee->setMail($mail);
-            $employee->setRole('ROLE_EMPLOYE');
+            $employee->setRole('EMPLOYE');
             $employee->setActif(true);
 
             $hashedPassword = $passwordHasher->hashPassword($employee, $password);
@@ -73,7 +73,7 @@ class AdminEmployeeController extends AbstractController
     ): Response
     {
         // Vérifier que c'est bien un employé
-        if ($employee->getRole() !== 'ROLE_EMPLOYE') {
+        if ($employee->getRole() !== 'EMPLOYE') {
             $this->addFlash('error', 'Seuls les employés peuvent être activés/désactivés');
             return $this->redirectToRoute('app_admin_employees_list');
         }
@@ -94,7 +94,7 @@ class AdminEmployeeController extends AbstractController
         EntityManagerInterface $em
     ): Response
     {
-        if ($employee->getRole() !== 'ROLE_EMPLOYE') {
+        if ($employee->getRole() !== 'EMPLOYE') {
             $this->addFlash('error', 'Seuls les employés peuvent être supprimés');
             return $this->redirectToRoute('app_admin_employees_list');
         }

@@ -1,4 +1,4 @@
-FROM php:8.4-fpm-bullseye
+FROM php:8.4-fpm-bookworm
 
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
@@ -14,15 +14,16 @@ RUN apt-get update -y \
         pkg-config \
         libssl-dev \
         libzstd-dev \
+        cmake \
         autoconf \
         g++ \
         make \
-    && docker-php-ext-install pdo pdo_mysql zip intl mbstring xml opcache \
-    && pecl install mongodb-1.17.0 \
-    && docker-php-ext-enable mongodb \
-    && apt-get purge -y autoconf g++ make \
-    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
+
+RUN docker-php-ext-install pdo pdo_mysql zip intl mbstring xml opcache
+
+RUN pecl install mongodb \
+    && docker-php-ext-enable mongodb
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

@@ -1,24 +1,26 @@
 FROM php:8.3-fpm-bullseye
 
-ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-
-RUN chmod +x /usr/local/bin/install-php-extensions \
-    && apt-get update -y \
+RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
         nginx \
         supervisor \
         git \
         curl \
         unzip \
-    && install-php-extensions \
-        pdo_mysql \
-        zip \
-        intl \
-        mbstring \
-        xml \
-        opcache \
-        mongodb \
-    && rm -rf /var/lib/apt/lists/*
+        libzip-dev \
+        libicu-dev \
+        libonig-dev \
+        libxml2-dev \
+        pkg-config \
+        libssl-dev \
+        libzstd-dev \
+        autoconf \
+        g++ \
+        make \
+    && docker-php-ext-install pdo pdo_mysql zip intl mbstring xml opcache \
+    && pecl install mongodb-1.16.2 \
+    && docker-php-ext-enable mongodb \
+    && rm -rf /var/lib/apt/lists/* /tmp/pear
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

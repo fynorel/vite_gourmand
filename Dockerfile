@@ -1,4 +1,4 @@
-FROM php:8.4-fpm-bullseye
+FROM php:8.3-fpm-bullseye
 
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends \
@@ -20,7 +20,6 @@ RUN apt-get update -y \
     && docker-php-ext-install pdo pdo_mysql zip intl mbstring xml opcache \
     && pecl install mongodb-1.15.3 \
     && docker-php-ext-enable mongodb \
-    && echo "extension=mongodb.so" >> /usr/local/etc/php/conf.d/mongodb.ini \
     && rm -rf /var/lib/apt/lists/* /tmp/pear
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -33,17 +32,16 @@ COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 WORKDIR /var/www/html
 
-COPY composer.json composer.lock ./
+# Copier TOUT le code source d'abord
+COPY . .
 
+# Puis installer les dépendances avec les scripts (bin/console est disponible)
 RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
     --no-dev \
     --optimize-autoloader \
     --no-interaction \
     --prefer-dist \
-     \
     --ignore-platform-req=ext-mongodb
-
-COPY . .
 
 RUN mkdir -p var/cache var/log \
     && chown -R www-data:www-data /var/www/html \

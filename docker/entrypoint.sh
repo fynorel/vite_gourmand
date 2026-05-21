@@ -4,7 +4,7 @@ set -e
 echo "==> Vite & Gourmand — Démarrage"
 
 echo "==> Nettoyage cache..."
-rm -rf var/cache/prod
+rm -rf var/cache/*
 
 echo "==> Génération cache prod..."
 APP_ENV=prod php bin/console cache:clear --no-warmup

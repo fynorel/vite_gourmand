@@ -42,13 +42,15 @@ WORKDIR /var/www/html
 
 COPY composer.json composer.lock ./
 
-RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
-    --no-dev \
-    --optimize-autoloader \
-    --no-interaction \
-    --prefer-dist \
-    --no-scripts \
-    2>&1
+RUN php -r "echo PHP_VERSION;" \
+    && php -m \
+    && COMPOSER_MEMORY_LIMIT=-1 composer install \
+        --no-dev \
+        --optimize-autoloader \
+        --no-interaction \
+        --prefer-dist \
+        --no-scripts \
+        -v
 
 COPY . .
 

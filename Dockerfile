@@ -1,16 +1,35 @@
-FROM webdevops/php-nginx:8.3
+FROM php:8.3-fpm-bullseye
 
-ENV WEB_DOCUMENT_ROOT=/var/www/html/public
-ENV APP_ENV=prod
-
-RUN apt-get update && apt-get install -y \
-    supervisor \
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends \
+        nginx \
+        supervisor \
+        git \
+        curl \
+        unzip \
+        libzip-dev \
+        libicu-dev \
+        libonig-dev \
+        libxml2-dev \
+        pkg-config \
+        libssl-dev \
+        autoconf \
+        g++ \
+        make \
+    && docker-php-ext-install pdo pdo_mysql zip intl mbstring xml opcache \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
-    && apt-get clean \
+    && apt-get purge -y autoconf g++ make \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+COPY docker/php/php.ini     /usr/local/etc/php/conf.d/app.ini
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+COPY docker/nginx/nginx.conf   /etc/nginx/nginx.conf
+COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
+COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 WORKDIR /var/www/html
 
@@ -26,7 +45,10 @@ RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
 COPY . .
 
 RUN mkdir -p var/cache var/log \
-    && chown -R application:application /var/www/html \
-    && chmod -R 755 /var/www/html/public
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/public \
+    && chmod +x docker/entrypoint.sh
 
-EXPOSE 80
+EXPOSE 8080
+
+ENTRYPOINT ["docker/entrypoint.sh"]

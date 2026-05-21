@@ -15,7 +15,7 @@ class Session
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'sessions')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id', nullable: false)]
     private ?Utilisateur $utilisateur = null;
 
     #[ORM\Column(length: 255)]

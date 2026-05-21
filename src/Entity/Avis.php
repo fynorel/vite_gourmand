@@ -23,7 +23,7 @@ class Avis
     private ?Commande $commande = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
-    #[ORM\JoinColumn(name: 'id_utilisateur', nullable: false, onDelete: 'RESTRICT')]
+    #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id', nullable: false, onDelete: 'RESTRICT')]
     private ?Utilisateur $utilisateur = null;
 
     #[ORM\Column(type: 'integer')]
@@ -36,7 +36,7 @@ class Avis
     private string $statut = 'EN_ATTENTE';
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
-    #[ORM\JoinColumn(name: 'validate_par', nullable: true, onDelete: 'SET NULL')]
+    #[ORM\JoinColumn(name: 'validate_par', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Utilisateur $validatePar = null;
 
     #[ORM\Column(name: 'date_creation', type: 'datetime_immutable')]

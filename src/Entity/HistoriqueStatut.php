@@ -28,7 +28,7 @@ class HistoriqueStatut
     private ?\DateTimeImmutable $changedAt = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
-    #[ORM\JoinColumn(name: 'changed_by', nullable: false, onDelete: 'RESTRICT')]
+    #[ORM\JoinColumn(name: 'changed_by', referencedColumnName: 'id', nullable: false, onDelete: 'RESTRICT')]
     private ?Utilisateur $changedBy = null;
 
     #[ORM\Column(type: 'text', nullable: true)]

@@ -17,7 +17,7 @@ class ResetToken
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'resetTokens')]
-    #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id_utilisateur', nullable: false, onDelete: 'CASCADE')]
     private ?Utilisateur $utilisateur = null;
 
     #[ORM\Column(type: 'string', length: 255, unique: true)]

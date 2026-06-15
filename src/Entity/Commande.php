@@ -24,7 +24,7 @@ class Commande
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'commandes')]
-    #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id', nullable: false, onDelete: 'RESTRICT')]
+    #[ORM\JoinColumn(name: 'id_utilisateur', referencedColumnName: 'id_utilisateur', nullable: false, onDelete: 'RESTRICT')]
     private ?Utilisateur $utilisateur = null;
 
     #[ORM\ManyToOne(targetEntity: Menu::class, inversedBy: 'commandes')]
@@ -68,7 +68,7 @@ class Commande
     private ?\DateTimeImmutable $dateContactAnnul = null;
 
     #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
-    #[ORM\JoinColumn(name: 'annule_par', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    #[ORM\JoinColumn(name: 'annule_par', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
     private ?Utilisateur $annulePar = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
